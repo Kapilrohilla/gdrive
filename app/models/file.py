@@ -42,5 +42,5 @@ class Files(Base):
         String(100),
     )
 
-    status: Mapped[FileStatus] = mapped_column(nullable=True, default=FileStatus.PENDING)
+    status: Mapped[FileStatus] = mapped_column(nullable=False, default=FileStatus.PENDING)
     folder = relationship("Folder")

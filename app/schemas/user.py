@@ -1,5 +1,3 @@
-from pydantic import BaseModel
+from app.schemas.iam.user import CreateUserDto, UpdateUserDto, UserResponse
 
-
-class CreateUserDto(BaseModel):
-    full_name: str
+__all__ = ["CreateUserDto", "UpdateUserDto", "UserResponse"]
