@@ -25,7 +25,7 @@
 | RBAC | Partial — management APIs done; route enforcement TBD |
 | Auth events | Done — persisted during auth flows; `GET /auth/events` |
 | Activity timeline | Partial — auth events only; resource activity planned |
-| Secure APIs | Partial — auth routes protected; storage routes open |
+| Secure APIs | Partial — storage + visitor list protected; RBAC permission checks TBD |
 
 ## Phase 2 — Collaboration
 

@@ -26,7 +26,7 @@ Last updated: 2026-07-26
 | Storage | S3 integration, presigned PUT upload, mark-upload-complete |
 | Folders | Create folder, list by owner / parent |
 | Infrastructure | Docker Compose for Postgres + Redis |
-| Mock drive API | `/drive/*` endpoints for frontend development |
+| Route authentication | Access JWT on users, files, folders, visitor list, rbac; public: `POST /visitor/` + auth bootstrap |
 
 ## In progress
 
@@ -41,18 +41,17 @@ Last updated: 2026-07-26
 ## Planned next (Phase 1 finish)
 
 1. Password hashing (bcrypt/argon2) and credential verification hardening
-2. RBAC permission middleware on storage routes (files, folders)
-3. Apply `authenticate(TokenType.ACCESS)` to storage routes
-4. File download, list, delete
-5. Activity timeline for files/folders
-6. Basic filename search
-7. Admin-only guard on RBAC mutation endpoints
+2. RBAC permission middleware (fine-grained checks beyond access JWT)
+3. File download, list, delete
+4. Activity timeline for files/folders
+5. Basic filename search
+6. Admin-only guard on RBAC mutation endpoints
 
 ## Code map
 
 ```
 app/
-├── api/v1/endpoints/   auth, rbac, visitor, users, folders, files, drive, identity (unmounted)
+├── api/v1/endpoints/   auth, rbac, visitor, users, folders, files, identity (unmounted)
 ├── middleware/         authenticate() + session validation + last_seen tracking
 ├── models/             files, folders, outbox
 ├── models/iam/         user, identity, session, visitor, role, permission, auth_events
@@ -63,7 +62,7 @@ app/
 │   ├── files.py        S3 presigned uploads
 │   └── folder.py       folder CRUD
 ├── schemas/
-│   ├── endpoints/      auth, rbac, visitor, users, files, folders, drive, identity
+│   ├── endpoints/      auth, rbac, visitor, users, files, folders, identity
 │   └── iam/            domain DTOs (roles, sessions, etc.)
 └── core/               database, security (refresh token hashing)
 ```

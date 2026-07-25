@@ -67,7 +67,7 @@ class RbacService:
                 status_code=400, detail="System roles cannot be deleted"
             )
 
-        db.delete(role)
+        await db.delete(role)
         await db.flush()
 
     async def list_permissions(self, db: AsyncSession) -> list[Permission]:
@@ -124,7 +124,7 @@ class RbacService:
         if permission is None:
             raise HTTPException(status_code=404, detail="Permission not found")
 
-        db.delete(permission)
+        await db.delete(permission)
         await db.flush()
 
     async def list_role_permissions(
@@ -177,7 +177,7 @@ class RbacService:
         if role_permission is None:
             raise HTTPException(status_code=404, detail="Role permission not found")
 
-        db.delete(role_permission)
+        await db.delete(role_permission)
         await db.flush()
 
     async def get_user_permissions(

@@ -2,17 +2,8 @@ import uuid
 
 from pydantic import BaseModel
 
-from app.schemas.iam.auth_event import AuthEventResponse
-from app.schemas.iam.permission import (
-    CreatePermissionDto,
-    PermissionResponse,
-    UpdatePermissionDto,
-)
-from app.schemas.iam.role import CreateRoleDto, RoleResponse, UpdateRoleDto
-from app.schemas.iam.role_permission import (
-    CreateRolePermissionDto,
-    RolePermissionResponse,
-)
+from app.schemas.iam.permission import PermissionResponse
+from app.schemas.iam.role import RoleResponse
 
 
 class RoleListResponse(BaseModel):

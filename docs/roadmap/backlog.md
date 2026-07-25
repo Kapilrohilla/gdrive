@@ -13,7 +13,7 @@ Work not yet started, grouped by domain. See [current-status.md](current-status.
 - [ ] Metadata extraction on upload
 - [ ] Basic filename search
 - [ ] Thumbnails / previews
-- [ ] Protect file/folder routes with access JWT + RBAC
+- [ ] Protect file/folder routes with RBAC permission checks (access JWT already required)
 
 ## IAM & security
 

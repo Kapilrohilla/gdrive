@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import DbSession
 from app.constants.enum import TokenType
 from app.services.iam.session import SessionService
 from app.services.iam.visitors import VisitorService
@@ -49,9 +49,7 @@ def _parse_uuid(value: UUID | str | None) -> UUID | None:
     return UUID(str(value))
 
 
-async def _authenticate_guest_dependency(
-    request: Request, db: AsyncSession = Depends(get_db)
-):
+async def _authenticate_guest_dependency(request: Request, db: DbSession):
     try:
         token = _extract_bearer_token(request)
         payload = jwt_utils.verify_token(token_type=TokenType.GUEST, token=token)
@@ -63,9 +61,7 @@ async def _authenticate_guest_dependency(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-async def _authenticate_access_dependency(
-    request: Request, db: AsyncSession = Depends(get_db)
-):
+async def _authenticate_access_dependency(request: Request, db: DbSession):
     try:
         token = _extract_bearer_token(request)
         payload = jwt_utils.verify_token(token_type=TokenType.ACCESS, token=token)
@@ -90,9 +86,7 @@ async def _authenticate_access_dependency(
         raise HTTPException(status_code=401, detail="Unauthorized")
 
 
-async def _authenticate_refresh_dependency(
-    request: Request, db: AsyncSession = Depends(get_db)
-):
+async def _authenticate_refresh_dependency(request: Request, db: DbSession):
     try:
         token = _extract_bearer_token(request)
         payload = jwt_utils.verify_token(token_type=TokenType.REFRESH, token=token)

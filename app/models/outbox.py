@@ -5,9 +5,10 @@ from sqlalchemy import JSON, DateTime, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.constants.enum import AggregateType, OutboxStatus
+from app.core.database.database import Base
 
 
-class Outbox(BaseModel):
+class Outbox(Base, BaseModel):
     event_name: Mapped[str] = mapped_column(String(length=255))
     aggregate_type: Mapped[AggregateType] = mapped_column(String(length=255))
     aggregate_id: Mapped[str] = mapped_column(String(length=255))

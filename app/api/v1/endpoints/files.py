@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import DbSession
+from app.constants.enum import TokenType
+from app.middleware import authenticate
 from app.schemas.endpoints.files import (
     GenerateUploadLinkRequest,
     GenerateUploadLinkResponse,
@@ -10,13 +11,15 @@ from app.schemas.endpoints.files import (
 )
 from app.services.files import file_service
 
-router = APIRouter(prefix="/files", tags=["File"])
+router = APIRouter(
+    prefix="/files",
+    tags=["File"],
+    dependencies=[Depends(authenticate(TokenType.ACCESS))],
+)
 
 
 @router.post("/gen_upload_link", response_model=GenerateUploadLinkResponse)
-async def gen_upload_link(
-    payload: GenerateUploadLinkRequest, db: AsyncSession = Depends(get_db)
-):
+async def gen_upload_link(payload: GenerateUploadLinkRequest, db: DbSession):
     service_response = await file_service.generate_pre_signed_url(
         name=payload.name,
         user_id=payload.user_id,
@@ -32,9 +35,7 @@ async def gen_upload_link(
 
 
 @router.post("/mark_upload_complete", response_model=MarkFileUploadResponse)
-async def mark_upload_complete(
-    payload: MarkFileUploadRequest, db: AsyncSession = Depends(get_db)
-):
+async def mark_upload_complete(payload: MarkFileUploadRequest, db: DbSession):
     service_response = await file_service.mark_upload_complete(id=payload.id, db=db)
     return {
         "message": "completed",

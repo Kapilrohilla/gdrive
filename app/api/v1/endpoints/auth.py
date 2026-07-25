@@ -1,9 +1,8 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_db
+from app.api.deps import DbSession
 from app.constants.enum import TokenType
 from app.middleware import authenticate
 from app.schemas.endpoints.auth import (
@@ -49,7 +48,7 @@ identity_user_visitor_service = IdentityUserVisitorService(
     response_model=AuthTokenResponse,
 )
 async def register_me(
-    request: Request, payload: RegisterUserPayload, db: AsyncSession = Depends(get_db)
+    request: Request, payload: RegisterUserPayload, db: DbSession
 ):
     visitor_id = UUID(str(request.state.visitor_id))
 
@@ -74,9 +73,7 @@ async def register_me(
     dependencies=[Depends(authenticate(TokenType.GUEST))],
     response_model=AuthTokenResponse,
 )
-async def login_me(
-    request: Request, payload: LoginUserPayload, db: AsyncSession = Depends(get_db)
-):
+async def login_me(request: Request, payload: LoginUserPayload, db: DbSession):
     visitor_id = UUID(str(request.state.visitor_id))
 
     user, identity, visitor = await identity_user_visitor_service.login_user(
@@ -100,7 +97,7 @@ async def login_me(
     dependencies=[Depends(authenticate(TokenType.REFRESH))],
     response_model=AuthTokenResponse,
 )
-async def refresh_tokens(request: Request, db: AsyncSession = Depends(get_db)):
+async def refresh_tokens(request: Request, db: DbSession):
     return await auth_session_service.refresh_tokens(
         db=db,
         session_id=UUID(str(request.state.session_id)),
@@ -116,7 +113,7 @@ async def refresh_tokens(request: Request, db: AsyncSession = Depends(get_db)):
     dependencies=[Depends(authenticate(TokenType.ACCESS))],
     response_model=LogoutResponse,
 )
-async def logout(request: Request, db: AsyncSession = Depends(get_db)):
+async def logout(request: Request, db: DbSession):
     await auth_session_service.logout(
         session_id=UUID(str(request.state.session_id)),
         db=db,
@@ -129,7 +126,7 @@ async def logout(request: Request, db: AsyncSession = Depends(get_db)):
     dependencies=[Depends(authenticate(TokenType.ACCESS))],
     response_model=LogoutAllResponse,
 )
-async def logout_all_devices(request: Request, db: AsyncSession = Depends(get_db)):
+async def logout_all_devices(request: Request, db: DbSession):
     revoked_sessions = await auth_session_service.logout_all_devices(
         user_id=UUID(str(request.state.user_id)),
         db=db,
@@ -145,7 +142,7 @@ async def logout_all_devices(request: Request, db: AsyncSession = Depends(get_db
     dependencies=[Depends(authenticate(TokenType.ACCESS))],
     response_model=AuthEventListResponse,
 )
-async def list_auth_events(request: Request, db: AsyncSession = Depends(get_db)):
+async def list_auth_events(request: Request, db: DbSession):
     events = await auth_session_service.list_auth_events(
         db=db,
         user_id=UUID(str(request.state.user_id)),

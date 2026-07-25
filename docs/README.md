@@ -58,7 +58,7 @@ All routes are prefixed with `/api`.
 | --- | --- | --- | --- |
 | `GET` | `/health` | — | Health check |
 | `POST` | `/visitor/` | — | Register visitor, returns guest JWT |
-| `GET` | `/visitor/` | — | List visitors (dev/admin) |
+| `GET` | `/visitor/` | Access JWT | List visitors |
 | `POST` | `/auth/register/me` | Guest JWT | Register user, create session, return access + refresh tokens |
 | `POST` | `/auth/login/me` | Guest JWT | Login user, create session, return tokens |
 | `POST` | `/auth/refresh` | Refresh JWT | Rotate refresh token, return new access + refresh tokens |
@@ -79,13 +79,12 @@ All routes are prefixed with `/api`.
 | `POST` | `/rbac/roles/{id}/permissions` | Access JWT | Assign permission to role |
 | `DELETE` | `/rbac/roles/{id}/permissions/{permission_id}` | Access JWT | Remove permission from role |
 | `GET` | `/rbac/me/permissions` | Access JWT | List current user's permissions via role |
-| `GET` | `/users/` | — | List users |
-| `POST` | `/users/` | — | Create user (admin/dev) |
-| `POST` | `/folders/` | — | Create folder |
-| `GET` | `/folders/` | — | List folders |
-| `POST` | `/files/gen_upload_link` | — | Generate S3 presigned upload URL |
-| `POST` | `/files/mark_upload_complete` | — | Mark file upload complete |
-| `GET` | `/drive/*` | — | Mock drive UI data (frontend dev) |
+| `GET` | `/users/` | Access JWT | List users |
+| `POST` | `/users/` | Access JWT | Create user |
+| `POST` | `/folders/` | Access JWT | Create folder |
+| `GET` | `/folders/` | Access JWT | List folders |
+| `POST` | `/files/gen_upload_link` | Access JWT | Generate S3 presigned upload URL |
+| `POST` | `/files/mark_upload_complete` | Access JWT | Mark file upload complete |
 
 ### Auth flow
 
@@ -100,13 +99,15 @@ All routes are prefixed with `/api`.
 
 Refresh tokens are stored as SHA-256 hashes in `sessions.refresh_token_hash`. Each refresh rotates the hash (reuse of an old refresh token fails after rotation).
 
-Request/response schemas live in `app/schemas/endpoints/` (one file per endpoint module).
+**Public routes:** `GET /health`, `POST /api/visitor/` (register only), and auth bootstrap endpoints (`/auth/register/me`, `/auth/login/me` with guest JWT).
+
+All other mounted API routes require an **access JWT** unless noted (refresh uses refresh JWT).
 
 ## Project structure
 
 ```
 app/
-├── api/v1/endpoints/     auth, rbac, visitor, users, folders, files, drive
+├── api/v1/endpoints/     auth, rbac, visitor, users, folders, files
 ├── middleware/           JWT authenticate dependencies + session validation
 ├── models/               files, folders, outbox
 ├── models/iam/           user, identity, session, visitor, role, permission, auth_events

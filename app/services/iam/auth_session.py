@@ -2,10 +2,11 @@ import secrets
 import uuid
 
 from fastapi import HTTPException, Request
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enum import TokenType
-from app.models.iam.auth_events import AuthEventSubject
+from app.models.iam.auth_events import AuthEvent, AuthEventSubject
 from app.models.iam.identity import Identity
 from app.models.iam.user import User
 from app.models.iam.visitor import Visitor
@@ -233,10 +234,6 @@ class AuthSessionService:
         user_id: uuid.UUID | None = None,
         limit: int = 100,
     ):
-        from sqlalchemy import select
-
-        from app.models.iam.auth_events import AuthEvent
-
         stmt = select(AuthEvent).order_by(AuthEvent.created_at.desc()).limit(limit)
         if user_id is not None:
             stmt = stmt.where(AuthEvent.user_id == user_id)
