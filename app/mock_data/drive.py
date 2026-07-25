@@ -285,9 +285,15 @@ def get_browse(folder_id: str | None = None) -> dict:
 
 
 def get_recent() -> dict:
-    today = [f for f in FILES if f["id"] in ("file-q4-doc", "file-sprint", "file-onboarding")]
+    today = [
+        f for f in FILES if f["id"] in ("file-q4-doc", "file-sprint", "file-onboarding")
+    ]
     yesterday = [f for f in FILES if f["id"] in ("file-hero", "file-team-photo")]
-    earlier = [f for f in FILES if f["id"] in ("file-roadmap", "file-budget-2024", "file-project-docs")]
+    earlier = [
+        f
+        for f in FILES
+        if f["id"] in ("file-roadmap", "file-budget-2024", "file-project-docs")
+    ]
 
     return {
         "groups": [
@@ -314,15 +320,18 @@ def get_file_details(file_id: str) -> dict | None:
     for item in FILES:
         if item["id"] == file_id:
             details = {**item}
-            details["activity"] = ACTIVITY.get(file_id, [
-                {
-                    "id": "act-default",
-                    "actor": ME,
-                    "action": "modified an item",
-                    "timestamp": item["modifiedAt"],
-                    "timeLabel": item["modifiedLabel"],
-                }
-            ])
+            details["activity"] = ACTIVITY.get(
+                file_id,
+                [
+                    {
+                        "id": "act-default",
+                        "actor": ME,
+                        "action": "modified an item",
+                        "timestamp": item["modifiedAt"],
+                        "timeLabel": item["modifiedLabel"],
+                    }
+                ],
+            )
             return details
     return None
 

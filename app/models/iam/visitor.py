@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, func
+from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
@@ -12,8 +12,14 @@ from app.core.database import Base
 
 class Visitor(Base):
     __tablename__ = "visitors"
+    __table_args__ = (
+        UniqueConstraint(
+            "identifier_type", "identifier_value", name="uix_visitor_identifier"
+        ),
+    )
 
-    device_id: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    identifier_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    identifier_value: Mapped[str] = mapped_column(String(100), nullable=False)
 
     first_seen_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

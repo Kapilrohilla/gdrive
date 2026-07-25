@@ -1,23 +1,19 @@
 import uuid
-from enum import Enum
 
-from sqlalchemy import Enum as SQLEnum, ForeignKey, Text
+from sqlalchemy import Enum as SQLEnum
+from sqlalchemy import ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String
 
+from app.constants.enum import UserStatus
 from app.core.database import Base
-
-
-class UserStatus(str, Enum):
-    ACTIVE = "active"
-    BLOCKED = "blocked"
 
 
 class User(Base):
     __tablename__ = "users"
 
-    full_name: Mapped[str] = mapped_column(String(100))
+    full_name: Mapped[str] = mapped_column(String(100), nullable=True)
 
     avatar: Mapped[str | None] = mapped_column(Text(), nullable=True)
 

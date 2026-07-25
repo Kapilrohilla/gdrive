@@ -1,5 +1,6 @@
+from app.constants.enum import IdentityProvider, IdentityStatus
 from app.models.iam.auth_events import AuthEvent, AuthEventSubject
-from app.models.iam.identity import Identity, IdentityProvider, IdentityStatus
+from app.models.iam.identity import Identity
 from app.models.iam.permission import Permission, PermissionAction
 from app.models.iam.role import Role
 from app.models.iam.role_permission import RolePermission

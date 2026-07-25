@@ -18,6 +18,6 @@ app.add_middleware(
 app.include_router(api_router)
 
 
-@app.get("/")
-def read_root():
-    return {"name": "CloudDrive API", "version": "0.1.0"}
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}

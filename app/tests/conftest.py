@@ -18,10 +18,6 @@ def create_test_app() -> FastAPI:
     )
     test_app.include_router(api_router)
 
-    @test_app.get("/")
-    def read_root():
-        return {"name": "CloudDrive API", "version": "0.1.0"}
-
     return test_app
 
 

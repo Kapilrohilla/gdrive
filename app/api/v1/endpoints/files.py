@@ -2,14 +2,21 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
-from app.schemas.file import GenerateUploadLink, MarkFileUpload
+from app.schemas.endpoints.files import (
+    GenerateUploadLinkRequest,
+    GenerateUploadLinkResponse,
+    MarkFileUploadRequest,
+    MarkFileUploadResponse,
+)
 from app.services.files import file_service
 
 router = APIRouter(prefix="/files", tags=["File"])
 
 
-@router.post("/gen_upload_link")
-async def gen_upload_link(payload: GenerateUploadLink, db: AsyncSession = Depends(get_db)):
+@router.post("/gen_upload_link", response_model=GenerateUploadLinkResponse)
+async def gen_upload_link(
+    payload: GenerateUploadLinkRequest, db: AsyncSession = Depends(get_db)
+):
     service_response = await file_service.generate_pre_signed_url(
         name=payload.name,
         user_id=payload.user_id,
@@ -24,8 +31,10 @@ async def gen_upload_link(payload: GenerateUploadLink, db: AsyncSession = Depend
     }
 
 
-@router.post("/mark_upload_complete")
-async def mark_upload_complete(payload: MarkFileUpload, db: AsyncSession = Depends(get_db)):
+@router.post("/mark_upload_complete", response_model=MarkFileUploadResponse)
+async def mark_upload_complete(
+    payload: MarkFileUploadRequest, db: AsyncSession = Depends(get_db)
+):
     service_response = await file_service.mark_upload_complete(id=payload.id, db=db)
     return {
         "message": "completed",

@@ -2,3 +2,5 @@
 .env
 .venv
 .pytest_cache
+.data
+.ruff_cache

@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     aws_s3_bucket: str = ""
     db_url: str = "postgresql+asyncpg://postgres:root@localhost:5432/gdrive"
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
+    jwt_secret: str = ""
 
 
 settings = Settings()

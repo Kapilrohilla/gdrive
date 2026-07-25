@@ -1,5 +1,5 @@
-from enum import Enum
 import uuid
+from enum import Enum
 
 from sqlalchemy import BIGINT, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID
@@ -42,5 +42,7 @@ class Files(Base):
         String(100),
     )
 
-    status: Mapped[FileStatus] = mapped_column(nullable=False, default=FileStatus.PENDING)
+    status: Mapped[FileStatus] = mapped_column(
+        nullable=False, default=FileStatus.PENDING
+    )
     folder = relationship("Folder")

@@ -1,33 +1,17 @@
 import uuid
 from datetime import datetime
-from enum import Enum
 
-from sqlalchemy import DateTime, Enum as SQLEnum, ForeignKey, Integer, String, Text
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.constants.enum import IdentifierType, IdentityStatus
 from app.core.database import Base
-
-
-class IdentityProvider(str, Enum):
-    PASSWORD = "password"
-    MAGIC_LINK = "magic_link"
-    OTP = "otp"
-
-
-class IdentityStatus(str, Enum):
-    PENDING = "verification_pending"
-    ACTIVE = "active"
-    BLOCKED = "blocked"
 
 
 class Identity(Base):
     __tablename__ = "identities"
-
-    provider: Mapped[IdentityProvider] = mapped_column(
-        SQLEnum(IdentityProvider, name="identity_provider"),
-        nullable=False,
-    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -36,7 +20,9 @@ class Identity(Base):
     )
 
     identifier: Mapped[str] = mapped_column(String(500), nullable=False)
-
+    identifier_type: Mapped[IdentifierType] = mapped_column(
+        SQLEnum(IdentifierType, name="identifier_type"), nullable=False
+    )
     secret_hash: Mapped[str | None] = mapped_column(Text(), nullable=True)
 
     identity_verified_at: Mapped[datetime | None] = mapped_column(
