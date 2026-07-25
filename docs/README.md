@@ -34,7 +34,7 @@ Planned (not yet written): `architecture/`, `api/`, `decisions/`, `diagrams/`.
 | Database | PostgreSQL 16 + SQLAlchemy async |
 | Cache | Redis (docker-compose; not wired in app yet) |
 | Object storage | AWS S3 (presigned uploads) |
-| Auth | JWT (guest, access, refresh) + visitor tracking |
+| Auth | JWT (guest, access, refresh) + DB-backed sessions + visitor tracking |
 
 ## Local development
 
@@ -59,8 +59,26 @@ All routes are prefixed with `/api`.
 | `GET` | `/health` | — | Health check |
 | `POST` | `/visitor/` | — | Register visitor, returns guest JWT |
 | `GET` | `/visitor/` | — | List visitors (dev/admin) |
-| `POST` | `/auth/register/me` | Guest JWT | Register user, link visitor, return access + refresh tokens |
-| `POST` | `/auth/login/me` | Guest JWT | Login user, link visitor if needed, return tokens |
+| `POST` | `/auth/register/me` | Guest JWT | Register user, create session, return access + refresh tokens |
+| `POST` | `/auth/login/me` | Guest JWT | Login user, create session, return tokens |
+| `POST` | `/auth/refresh` | Refresh JWT | Rotate refresh token, return new access + refresh tokens |
+| `POST` | `/auth/logout` | Access JWT | Revoke current session |
+| `POST` | `/auth/logout/all` | Access JWT | Revoke all sessions for the user |
+| `GET` | `/auth/events` | Access JWT | List auth events for current user |
+| `GET` | `/rbac/roles` | Access JWT | List roles |
+| `POST` | `/rbac/roles` | Access JWT | Create role |
+| `GET` | `/rbac/roles/{id}` | Access JWT | Get role |
+| `PATCH` | `/rbac/roles/{id}` | Access JWT | Update role |
+| `DELETE` | `/rbac/roles/{id}` | Access JWT | Delete role (non-system only) |
+| `GET` | `/rbac/permissions` | Access JWT | List permissions |
+| `POST` | `/rbac/permissions` | Access JWT | Create permission |
+| `GET` | `/rbac/permissions/{id}` | Access JWT | Get permission |
+| `PATCH` | `/rbac/permissions/{id}` | Access JWT | Update permission |
+| `DELETE` | `/rbac/permissions/{id}` | Access JWT | Delete permission |
+| `GET` | `/rbac/roles/{id}/permissions` | Access JWT | List permissions assigned to role |
+| `POST` | `/rbac/roles/{id}/permissions` | Access JWT | Assign permission to role |
+| `DELETE` | `/rbac/roles/{id}/permissions/{permission_id}` | Access JWT | Remove permission from role |
+| `GET` | `/rbac/me/permissions` | Access JWT | List current user's permissions via role |
 | `GET` | `/users/` | — | List users |
 | `POST` | `/users/` | — | Create user (admin/dev) |
 | `POST` | `/folders/` | — | Create folder |
@@ -72,8 +90,15 @@ All routes are prefixed with `/api`.
 ### Auth flow
 
 1. `POST /api/visitor/` — create or fetch visitor → receive **guest** JWT
-2. `POST /api/auth/register/me` or `/api/auth/login/me` with `Authorization: Bearer <guest_jwt>` → receive **access** + **refresh** JWTs
-3. Protected routes use `authenticate(TokenType.ACCESS)` dependency (middleware updates `visitor.last_seen_at` on each authenticated request)
+2. `POST /api/auth/register/me` or `/api/auth/login/me` with `Authorization: Bearer <guest_jwt>` → creates a **session** in DB and returns **access** + **refresh** JWTs (both include `session_id`)
+3. `POST /api/auth/refresh` with `Authorization: Bearer <refresh_jwt>` → validates session + rotates refresh token hash → new token pair
+4. `POST /api/auth/logout` with `Authorization: Bearer <access_jwt>` → revokes current session (`revoked_at` set)
+5. `POST /api/auth/logout/all` with `Authorization: Bearer <access_jwt>` → revokes all user sessions
+6. Protected routes use `authenticate(TokenType.ACCESS)` — validates JWT, checks session is active, updates `last_seen_at`
+7. Auth events (`login success`, `login failed`, `logout`, `session created`, `session revoked`) are persisted to `auth_events` during the above flows
+8. RBAC admin APIs under `/api/rbac/*` manage roles, permissions, and role-permission assignments (access JWT required; permission enforcement middleware TBD)
+
+Refresh tokens are stored as SHA-256 hashes in `sessions.refresh_token_hash`. Each refresh rotates the hash (reuse of an old refresh token fails after rotation).
 
 Request/response schemas live in `app/schemas/endpoints/` (one file per endpoint module).
 
@@ -81,8 +106,8 @@ Request/response schemas live in `app/schemas/endpoints/` (one file per endpoint
 
 ```
 app/
-├── api/v1/endpoints/     auth, visitor, users, folders, files, drive
-├── middleware/           JWT authenticate dependencies
+├── api/v1/endpoints/     auth, rbac, visitor, users, folders, files, drive
+├── middleware/           JWT authenticate dependencies + session validation
 ├── models/               files, folders, outbox
 ├── models/iam/           user, identity, session, visitor, role, permission, auth_events
 ├── services/             files, folder, user, iam/, utils/
@@ -90,7 +115,7 @@ app/
 │   ├── endpoints/        API request/response schemas (per endpoint)
 │   └── iam/              Domain DTOs
 ├── constants/            Shared enums
-└── core/                 database, security (stub)
+└── core/                 database, security (token hashing)
 ```
 
 ## Long-term goal

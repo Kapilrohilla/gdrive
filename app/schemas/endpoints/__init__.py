@@ -45,6 +45,8 @@ __all__ = [
     "GetVisitorsResponse",
     "IdentityHealthResponse",
     "LoginUserPayload",
+    "LogoutAllResponse",
+    "LogoutResponse",
     "MarkFileUploadRequest",
     "MarkFileUploadResponse",
     "RegisterUserPayload",

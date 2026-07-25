@@ -1,1 +1,9 @@
-"""Password hashing and JWT token utilities."""
+import hashlib
+
+
+def hash_refresh_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def verify_refresh_token(token: str, token_hash: str) -> bool:
+    return hash_refresh_token(token) == token_hash

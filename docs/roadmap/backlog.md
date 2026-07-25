@@ -18,9 +18,8 @@ Work not yet started, grouped by domain. See [current-status.md](current-status.
 ## IAM & security
 
 - [ ] Password hashing (replace plain-text credential storage)
-- [ ] Refresh token endpoint + rotation
-- [ ] Logout + session revocation (single + all devices)
-- [ ] RBAC enforcement middleware
+- [ ] RBAC enforcement middleware (check permissions on routes)
+- [ ] Admin-only guard on RBAC mutation endpoints
 - [ ] OAuth flows (Google, GitHub)
 - [ ] Password reset / email verification / OTP flows
 - [ ] Mount identity health/router on API router
@@ -30,8 +29,7 @@ Work not yet started, grouped by domain. See [current-status.md](current-status.
 ## Activity
 
 - [ ] Resource activity timeline (create, update, share, delete)
-- [ ] Audit log query APIs
-- [ ] Persist auth events on login/register/failure
+- [ ] Audit log query APIs for non-auth resources
 
 ## Collaboration (Phase 2)
 

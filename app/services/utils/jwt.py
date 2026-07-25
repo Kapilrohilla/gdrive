@@ -12,34 +12,39 @@ REFRESH_EXPIRY_DAYS = 30
 
 
 class JwtUtils:
-    def __init__(self):
-        pass
-
     def generate_token(
         self,
         token_type: TokenType,
         visitor_id: uuid.UUID,
+        session_id: uuid.UUID | None = None,
         identity_id: uuid.UUID | None = None,
         user_id: uuid.UUID | None = None,
     ):
         if token_type == TokenType.GUEST:
             return self._generate_guest_token(visitor_id=visitor_id)
-        elif token_type == TokenType.ACCESS:
-            if user_id is None or identity_id is None:
+        if token_type == TokenType.ACCESS:
+            if user_id is None or identity_id is None or session_id is None:
                 raise ValueError(
-                    "User ID and identity ID are required for access token"
+                    "User ID, identity ID, and session ID are required for access token"
                 )
             return self._generate_access_token(
-                user_id=user_id, identity_id=identity_id, visitor_id=visitor_id
+                user_id=user_id,
+                identity_id=identity_id,
+                visitor_id=visitor_id,
+                session_id=session_id,
             )
-        elif token_type == TokenType.REFRESH:
-            if user_id is None or identity_id is None:
+        if token_type == TokenType.REFRESH:
+            if user_id is None or identity_id is None or session_id is None:
                 raise ValueError(
-                    "User ID and identity ID are required for refresh token"
+                    "User ID, identity ID, and session ID are required for refresh token"
                 )
             return self._generate_refresh_token(
-                user_id=user_id, identity_id=identity_id, visitor_id=visitor_id
+                user_id=user_id,
+                identity_id=identity_id,
+                visitor_id=visitor_id,
+                session_id=session_id,
             )
+        raise ValueError(f"Invalid token type: {token_type}")
 
     def _generate_guest_token(self, visitor_id: uuid.UUID):
         expired_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
@@ -48,7 +53,7 @@ class JwtUtils:
 
         jwt_payload = {
             "token_type": TokenType.GUEST,
-            "visitor_id": visitor_id,
+            "visitor_id": str(visitor_id),
             "exp": expired_at,
         }
         encoded_jwt = jwt.encode(
@@ -57,16 +62,21 @@ class JwtUtils:
         return encoded_jwt, expired_at
 
     def _generate_access_token(
-        self, user_id: uuid.UUID, identity_id: uuid.UUID, visitor_id: uuid.UUID
+        self,
+        user_id: uuid.UUID,
+        identity_id: uuid.UUID,
+        visitor_id: uuid.UUID,
+        session_id: uuid.UUID,
     ):
         expired_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
             hours=ACCESS_EXPIRY_HOUR
         )
         jwt_payload = {
             "token_type": TokenType.ACCESS,
-            "user_id": user_id,
-            "identity_id": identity_id,
-            "visitor_id": visitor_id,
+            "user_id": str(user_id),
+            "identity_id": str(identity_id),
+            "visitor_id": str(visitor_id),
+            "session_id": str(session_id),
             "exp": expired_at,
         }
         encoded_jwt = jwt.encode(
@@ -75,16 +85,21 @@ class JwtUtils:
         return encoded_jwt, expired_at
 
     def _generate_refresh_token(
-        self, user_id: uuid.UUID, identity_id: uuid.UUID, visitor_id: uuid.UUID
+        self,
+        user_id: uuid.UUID,
+        identity_id: uuid.UUID,
+        visitor_id: uuid.UUID,
+        session_id: uuid.UUID,
     ):
         expired_at = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
             days=REFRESH_EXPIRY_DAYS
         )
         jwt_payload = {
             "token_type": TokenType.REFRESH,
-            "user_id": user_id,
-            "identity_id": identity_id,
-            "visitor_id": visitor_id,
+            "user_id": str(user_id),
+            "identity_id": str(identity_id),
+            "visitor_id": str(visitor_id),
+            "session_id": str(session_id),
             "exp": expired_at,
         }
         encoded_jwt = jwt.encode(

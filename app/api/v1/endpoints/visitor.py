@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_db
-from app.schemas.endpoints.visitor import RegisterVisitorRequest, RegisterVisitorResponse
+from app.schemas.endpoints.visitor import (
+    RegisterVisitorRequest,
+    RegisterVisitorResponse,
+)
 from app.services.iam.visitors import VisitorService
 from app.services.iam.visitor_jwt import VisitorJwtService
 from app.services.utils.jwt import JwtUtils

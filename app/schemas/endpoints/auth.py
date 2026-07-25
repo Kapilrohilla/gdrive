@@ -9,6 +9,7 @@ from app.constants.enum import (
     IdentityStatus,
     UserStatus,
 )
+from app.schemas.iam.auth_event import AuthEventResponse
 
 
 class RegisterUserPayload(BaseModel):
@@ -74,3 +75,16 @@ class AuthTokenResponse(BaseModel):
     user: AuthUserResponse
     identity: AuthIdentityResponse
     visitor: AuthVisitorResponse
+
+
+class LogoutResponse(BaseModel):
+    message: str
+
+
+class LogoutAllResponse(BaseModel):
+    message: str
+    revoked_sessions: int
+
+
+class AuthEventListResponse(BaseModel):
+    events: list[AuthEventResponse]

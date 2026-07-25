@@ -11,7 +11,7 @@
 | User login | Done — guest-gated `/auth/login/me` |
 | JWT (guest / access / refresh) | Done — generation + verify |
 | Auth middleware | Done — FastAPI dependencies; RBAC TBD |
-| Session management | Partial — schema done; refresh/logout TBD |
+| Session management | Done — DB sessions, refresh rotation, logout + logout all |
 | Password security | Not started — hashing required before production |
 | File upload | Done — presigned PUT |
 | File download | Planned |
@@ -22,8 +22,9 @@
 | File management | Partial — upload only |
 | Folder management | Partial — create + list |
 | Basic filename search | Planned |
-| RBAC | Schema done; middleware not wired |
-| Activity timeline | Planned |
+| RBAC | Partial — management APIs done; route enforcement TBD |
+| Auth events | Done — persisted during auth flows; `GET /auth/events` |
+| Activity timeline | Partial — auth events only; resource activity planned |
 | Secure APIs | Partial — auth routes protected; storage routes open |
 
 ## Phase 2 — Collaboration

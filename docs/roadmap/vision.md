@@ -53,7 +53,8 @@ The backend is building the IAM and storage foundation:
 1. **Anonymous visitors** — device/browser identity with guest JWT
 2. **Registered users** — identity-linked accounts (email/phone/username) with access + refresh tokens
 3. **Object storage** — S3 presigned uploads with folder hierarchy
-4. **Next** — hardened credentials, session lifecycle, RBAC on storage routes, file lifecycle APIs
+4. **Session lifecycle** — refresh rotation, single logout, logout all devices
+5. **Next** — password hashing, RBAC on storage routes, file lifecycle APIs
 
 See [current-status.md](current-status.md) for the live checklist.
 
