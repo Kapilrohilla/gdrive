@@ -16,64 +16,85 @@ The initial focus is cloud storage. The long-term goal is a privacy-first person
 
 ```
 docs/
-├── README.md                          ← you are here
-├── architecture/                      System design & domain docs
-├── roadmap/                           Vision, milestones, backlog, status
-├── decisions/                         Architecture Decision Records (ADRs)
-├── api/                               API reference by domain
-└── diagrams/                          Visual flows (draw.io)
+├── README.md                 ← you are here
+└── roadmap/
+    ├── vision.md             Product vision and long-term goal
+    ├── milestones.md         Phase 1–5 milestones
+    ├── backlog.md            Planned work by domain
+    └── current-status.md     Completed / in progress / next
 ```
 
-### Architecture
+Planned (not yet written): `architecture/`, `api/`, `decisions/`, `diagrams/`.
 
-| Doc | Description |
+## Stack
+
+| Layer | Technology |
 | --- | --- |
-| [overview.md](architecture/overview.md) | High-level system overview |
-| [system-design.md](architecture/system-design.md) | Service boundaries and data flow |
-| [database-schema.md](architecture/database-schema.md) | IAM, storage, and shared models |
-| [authentication.md](architecture/authentication.md) | Visitors, identities, sessions, JWT |
-| [authorization-rbac.md](architecture/authorization-rbac.md) | Roles, permissions, enforcement |
-| [storage.md](architecture/storage.md) | Files, folders, S3, uploads |
-| [sharing.md](architecture/sharing.md) | Collaboration (Phase 2) |
-| [search.md](architecture/search.md) | Search & indexing (Phase 3) |
-| [ai-architecture.md](architecture/ai-architecture.md) | AI services & consent (Phase 4–5) |
-| [security-dpdp.md](architecture/security-dpdp.md) | Security & DPDP compliance |
+| API | FastAPI (`CloudDrive API`) |
+| Database | PostgreSQL 16 + SQLAlchemy async |
+| Cache | Redis (docker-compose; not wired in app yet) |
+| Object storage | AWS S3 (presigned uploads) |
+| Auth | JWT (guest, access, refresh) + visitor tracking |
 
-### Roadmap
+## Local development
 
-| Doc | Description |
-| --- | --- |
-| [vision.md](roadmap/vision.md) | Product vision and long-term goal |
-| [milestones.md](roadmap/milestones.md) | Phase 1–5 milestones |
-| [backlog.md](roadmap/backlog.md) | Planned work by domain |
-| [current-status.md](roadmap/current-status.md) | Completed / in progress / next |
+```bash
+# Start Postgres + Redis
+docker compose up -d
 
-### Decisions
+# Run API (from backend/)
+fastapi dev --port 5000
+```
 
-| ADR | Topic |
-| --- | --- |
-| [ADR-001](decisions/ADR-001-authentication.md) | Authentication model |
-| [ADR-002](decisions/ADR-002-storage-engine.md) | Object storage engine |
-| [ADR-003](decisions/ADR-003-file-versioning.md) | File versioning |
-| [ADR-004](decisions/ADR-004-ai-indexing.md) | AI indexing & consent |
+Configure environment in `.env` (see `.env.example`). Required: `DB_URL`, `JWT_SECRET`, AWS credentials for file uploads.
 
-### API
+Interactive docs: `http://127.0.0.1:5000/docs`
 
-| Doc | Description |
-| --- | --- |
-| [authentication.md](api/authentication.md) | Auth & visitor endpoints |
-| [files.md](api/files.md) | File upload & management |
-| [folders.md](api/folders.md) | Folder hierarchy |
-| [sharing.md](api/sharing.md) | Sharing (planned) |
-| [search.md](api/search.md) | Search (planned) |
+## API overview (mounted routes)
 
-## Stack (current)
+All routes are prefixed with `/api`.
 
-- **API:** FastAPI (`CloudDrive API`)
-- **DB:** PostgreSQL + SQLAlchemy async
-- **Object storage:** AWS S3 (presigned uploads)
-- **Auth design:** JWT + refresh sessions (implementation in progress)
+| Method | Path | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/health` | — | Health check |
+| `POST` | `/visitor/` | — | Register visitor, returns guest JWT |
+| `GET` | `/visitor/` | — | List visitors (dev/admin) |
+| `POST` | `/auth/register/me` | Guest JWT | Register user, link visitor, return access + refresh tokens |
+| `POST` | `/auth/login/me` | Guest JWT | Login user, link visitor if needed, return tokens |
+| `GET` | `/users/` | — | List users |
+| `POST` | `/users/` | — | Create user (admin/dev) |
+| `POST` | `/folders/` | — | Create folder |
+| `GET` | `/folders/` | — | List folders |
+| `POST` | `/files/gen_upload_link` | — | Generate S3 presigned upload URL |
+| `POST` | `/files/mark_upload_complete` | — | Mark file upload complete |
+| `GET` | `/drive/*` | — | Mock drive UI data (frontend dev) |
+
+### Auth flow
+
+1. `POST /api/visitor/` — create or fetch visitor → receive **guest** JWT
+2. `POST /api/auth/register/me` or `/api/auth/login/me` with `Authorization: Bearer <guest_jwt>` → receive **access** + **refresh** JWTs
+3. Protected routes use `authenticate(TokenType.ACCESS)` dependency (middleware updates `visitor.last_seen_at` on each authenticated request)
+
+Request/response schemas live in `app/schemas/endpoints/` (one file per endpoint module).
+
+## Project structure
+
+```
+app/
+├── api/v1/endpoints/     auth, visitor, users, folders, files, drive
+├── middleware/           JWT authenticate dependencies
+├── models/               files, folders, outbox
+├── models/iam/           user, identity, session, visitor, role, permission, auth_events
+├── services/             files, folder, user, iam/, utils/
+├── schemas/
+│   ├── endpoints/        API request/response schemas (per endpoint)
+│   └── iam/              Domain DTOs
+├── constants/            Shared enums
+└── core/                 database, security (stub)
+```
 
 ## Long-term goal
 
 Evolve from secure cloud storage into a **privacy-first personal intelligence platform** — store, organize, share, search, and interact with personal content using AI, with full data ownership and DPDP compliance.
+
+See [roadmap/vision.md](roadmap/vision.md) for phases and [roadmap/current-status.md](roadmap/current-status.md) for what is implemented today.

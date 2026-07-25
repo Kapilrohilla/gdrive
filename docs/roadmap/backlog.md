@@ -5,6 +5,7 @@ Work not yet started, grouped by domain. See [current-status.md](current-status.
 ## Storage
 
 - [ ] File download (presigned GET)
+- [ ] File list / delete APIs
 - [ ] File versioning
 - [ ] Trash / soft delete
 - [ ] Restore from trash
@@ -12,21 +13,25 @@ Work not yet started, grouped by domain. See [current-status.md](current-status.
 - [ ] Metadata extraction on upload
 - [ ] Basic filename search
 - [ ] Thumbnails / previews
+- [ ] Protect file/folder routes with access JWT + RBAC
 
 ## IAM & security
 
-- [ ] Complete login / logout / register flows
-- [ ] Refresh token rotation
-- [ ] Authentication middleware
+- [ ] Password hashing (replace plain-text credential storage)
+- [ ] Refresh token endpoint + rotation
+- [ ] Logout + session revocation (single + all devices)
 - [ ] RBAC enforcement middleware
-- [ ] Session revocation (single + all devices)
+- [ ] OAuth flows (Google, GitHub)
 - [ ] Password reset / email verification / OTP flows
-- [ ] Wire visitor registration into API router
+- [ ] Mount identity health/router on API router
+- [ ] Rate limiting on auth endpoints
+- [ ] Failed login lockout (`locked_until` on identity)
 
 ## Activity
 
 - [ ] Resource activity timeline (create, update, share, delete)
 - [ ] Audit log query APIs
+- [ ] Persist auth events on login/register/failure
 
 ## Collaboration (Phase 2)
 
@@ -56,3 +61,9 @@ Work not yet started, grouped by domain. See [current-status.md](current-status.
 - [ ] Document summarization
 - [ ] Global knowledge search / Q&A
 - [ ] Cascading erasure of embeddings, OCR, summaries on delete
+
+## Documentation
+
+- [ ] Architecture docs (`architecture/`)
+- [ ] API reference docs (`api/`)
+- [ ] ADRs (`decisions/`)

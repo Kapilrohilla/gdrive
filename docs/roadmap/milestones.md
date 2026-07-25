@@ -6,20 +6,25 @@
 
 | Feature | Status |
 | --- | --- |
-| User authentication | In progress |
-| Visitor management | In progress |
-| Session management | Schema done; rotation in progress |
-| File upload / download | Upload (presigned) done; download TBD |
+| Visitor management | Done — register, guest JWT, last_seen tracking |
+| User registration | Done — guest-gated `/auth/register/me` |
+| User login | Done — guest-gated `/auth/login/me` |
+| JWT (guest / access / refresh) | Done — generation + verify |
+| Auth middleware | Done — FastAPI dependencies; RBAC TBD |
+| Session management | Partial — schema done; refresh/logout TBD |
+| Password security | Not started — hashing required before production |
+| File upload | Done — presigned PUT |
+| File download | Planned |
 | Folder hierarchy | Done (basic) |
 | Metadata extraction | Planned |
 | S3 object storage | Done |
 | Presigned uploads | Done |
-| File management | Partial |
-| Folder management | Partial |
+| File management | Partial — upload only |
+| Folder management | Partial — create + list |
 | Basic filename search | Planned |
-| RBAC | Schema done; middleware in progress |
-| Activity timeline | In progress |
-| Secure APIs | In progress |
+| RBAC | Schema done; middleware not wired |
+| Activity timeline | Planned |
+| Secure APIs | Partial — auth routes protected; storage routes open |
 
 ## Phase 2 — Collaboration
 

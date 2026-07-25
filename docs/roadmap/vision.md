@@ -12,13 +12,13 @@ Build a platform where users can:
 
 ## From storage to intelligence
 
-| Stage | Focus |
-| --- | --- |
-| Phase 1 | Secure storage platform |
-| Phase 2 | Collaboration & sharing |
-| Phase 3 | Intelligent / semantic search |
-| Phase 4 | AI media intelligence |
-| Phase 5 | Personal knowledge platform |
+| Stage | Focus | Current state |
+| --- | --- | --- |
+| Phase 1 | Secure storage platform | In progress — auth + upload foundation built |
+| Phase 2 | Collaboration & sharing | Not started |
+| Phase 3 | Intelligent / semantic search | Not started |
+| Phase 4 | AI media intelligence | Not started |
+| Phase 5 | Personal knowledge platform | Not started |
 
 Although the initial implementation focuses on cloud storage, the long-term vision extends beyond a traditional Drive clone into a **privacy-first personal knowledge platform** powered by AI.
 
@@ -45,6 +45,17 @@ Every feature follows **Privacy by Design**:
 ### AI as an enhancement
 
 AI enhances productivity; it does not replace core functionality. The storage platform must remain fully functional if AI services are unavailable.
+
+## Current implementation focus (Phase 1)
+
+The backend is building the IAM and storage foundation:
+
+1. **Anonymous visitors** — device/browser identity with guest JWT
+2. **Registered users** — identity-linked accounts (email/phone/username) with access + refresh tokens
+3. **Object storage** — S3 presigned uploads with folder hierarchy
+4. **Next** — hardened credentials, session lifecycle, RBAC on storage routes, file lifecycle APIs
+
+See [current-status.md](current-status.md) for the live checklist.
 
 ## Long-term goal
 
