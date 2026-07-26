@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, Request
 
 from app.api.deps import DbSession
 from app.constants.enum import TokenType
-from app.middleware import authenticate
+from app.middleware import authenticate, require_permission
+from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.auth import (
     AuthEventListResponse,
     AuthTokenResponse,
@@ -137,7 +138,10 @@ async def logout_all_devices(request: Request, db: DbSession):
 
 @router.get(
     "/events",
-    dependencies=[Depends(authenticate(TokenType.ACCESS))],
+    dependencies=[
+        Depends(authenticate(TokenType.ACCESS)),
+        Depends(require_permission("auth_events", PermissionAction.READ)),
+    ],
     response_model=AuthEventListResponse,
 )
 async def list_auth_events(request: Request, db: DbSession):
@@ -146,3 +150,6 @@ async def list_auth_events(request: Request, db: DbSession):
         user_id=UUID(str(request.state.user_id)),
     )
     return {"events": events}
+
+
+__all__ = ["router"]

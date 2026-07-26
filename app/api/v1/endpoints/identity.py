@@ -14,3 +14,6 @@ router = APIRouter(
 @router.get("/health", response_model=IdentityHealthResponse)
 async def identity_health():
     return {"status": "ok"}
+
+
+__all__ = ["router"]

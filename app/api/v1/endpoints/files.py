@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.api.deps import DbSession
 from app.constants.enum import TokenType
-from app.middleware import authenticate
+from app.middleware import authenticate, require_permission
+from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.files import (
     GenerateUploadLinkRequest,
     GenerateUploadLinkResponse,
@@ -18,7 +19,11 @@ router = APIRouter(
 )
 
 
-@router.post("/gen_upload_link", response_model=GenerateUploadLinkResponse)
+@router.post(
+    "/gen_upload_link",
+    dependencies=[Depends(require_permission("files", PermissionAction.CREATE))],
+    response_model=GenerateUploadLinkResponse,
+)
 async def gen_upload_link(payload: GenerateUploadLinkRequest, db: DbSession):
     service_response = await file_service.generate_pre_signed_url(
         name=payload.name,
@@ -34,10 +39,17 @@ async def gen_upload_link(payload: GenerateUploadLinkRequest, db: DbSession):
     }
 
 
-@router.post("/mark_upload_complete", response_model=MarkFileUploadResponse)
+@router.post(
+    "/mark_upload_complete",
+    dependencies=[Depends(require_permission("files", PermissionAction.UPDATE))],
+    response_model=MarkFileUploadResponse,
+)
 async def mark_upload_complete(payload: MarkFileUploadRequest, db: DbSession):
     service_response = await file_service.mark_upload_complete(id=payload.id, db=db)
     return {
         "message": "completed",
         "data": service_response,
     }
+
+
+__all__ = ["router"]

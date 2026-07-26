@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.api.deps import DbSession
 from app.constants.enum import TokenType
-from app.middleware import authenticate
+from app.middleware import authenticate, require_permission
+from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.visitor import (
     RegisterVisitorRequest,
     RegisterVisitorResponse,
@@ -20,7 +21,10 @@ visitor_jwt_service = VisitorJwtService(visitor_service=visitor_service, jwt_uti
 
 @router.get(
     "/",
-    dependencies=[Depends(authenticate(TokenType.ACCESS))],
+    dependencies=[
+        Depends(authenticate(TokenType.ACCESS)),
+        Depends(require_permission("visitors", PermissionAction.READ)),
+    ],
 )
 async def get_visitors(db: DbSession):
     service_response = await visitor_service.get_visitor(db)
@@ -35,3 +39,6 @@ async def register_visitor(payload: RegisterVisitorRequest, db: DbSession):
         db=db,
     )
     return service_response
+
+
+__all__ = ["router"]

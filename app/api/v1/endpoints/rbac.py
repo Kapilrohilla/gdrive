@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.api.deps import DbSession
 from app.constants.enum import TokenType
-from app.middleware import authenticate
+from app.middleware import authenticate, require_permission
+from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.rbac import (
     MessageResponse,
     MyPermissionsResponse,
@@ -34,20 +35,32 @@ router = APIRouter(
 rbac_service = RbacService()
 
 
-@router.get("/roles", response_model=RoleListResponse)
+@router.get(
+    "/roles",
+    dependencies=[Depends(require_permission("roles", PermissionAction.READ))],
+    response_model=RoleListResponse,
+)
 async def list_roles(db: DbSession):
     roles = await rbac_service.list_roles(db)
     return {"roles": roles}
 
 
-@router.post("/roles", response_model=RoleResponse)
+@router.post(
+    "/roles",
+    dependencies=[Depends(require_permission("roles", PermissionAction.CREATE))],
+    response_model=RoleResponse,
+)
 async def create_role(payload: CreateRoleDto, db: DbSession):
     role = await rbac_service.create_role(payload, db)
     await db.commit()
     return role
 
 
-@router.get("/roles/{role_id}", response_model=RoleResponse)
+@router.get(
+    "/roles/{role_id}",
+    dependencies=[Depends(require_permission("roles", PermissionAction.READ))],
+    response_model=RoleResponse,
+)
 async def get_role(role_id: UUID, db: DbSession):
     role = await rbac_service.get_role(role_id, db)
     if role is None:
@@ -55,34 +68,54 @@ async def get_role(role_id: UUID, db: DbSession):
     return role
 
 
-@router.patch("/roles/{role_id}", response_model=RoleResponse)
+@router.patch(
+    "/roles/{role_id}",
+    dependencies=[Depends(require_permission("roles", PermissionAction.UPDATE))],
+    response_model=RoleResponse,
+)
 async def update_role(role_id: UUID, payload: UpdateRoleDto, db: DbSession):
     role = await rbac_service.update_role(role_id, payload, db)
     await db.commit()
     return role
 
 
-@router.delete("/roles/{role_id}", response_model=MessageResponse)
+@router.delete(
+    "/roles/{role_id}",
+    dependencies=[Depends(require_permission("roles", PermissionAction.DELETE))],
+    response_model=MessageResponse,
+)
 async def delete_role(role_id: UUID, db: DbSession):
     await rbac_service.delete_role(role_id, db)
     await db.commit()
     return {"message": "Role deleted successfully"}
 
 
-@router.get("/permissions", response_model=PermissionListResponse)
+@router.get(
+    "/permissions",
+    dependencies=[Depends(require_permission("permissions", PermissionAction.READ))],
+    response_model=PermissionListResponse,
+)
 async def list_permissions(db: DbSession):
     permissions = await rbac_service.list_permissions(db)
     return {"permissions": permissions}
 
 
-@router.post("/permissions", response_model=PermissionResponse)
+@router.post(
+    "/permissions",
+    dependencies=[Depends(require_permission("permissions", PermissionAction.CREATE))],
+    response_model=PermissionResponse,
+)
 async def create_permission(payload: CreatePermissionDto, db: DbSession):
     permission = await rbac_service.create_permission(payload, db)
     await db.commit()
     return permission
 
 
-@router.get("/permissions/{permission_id}", response_model=PermissionResponse)
+@router.get(
+    "/permissions/{permission_id}",
+    dependencies=[Depends(require_permission("permissions", PermissionAction.READ))],
+    response_model=PermissionResponse,
+)
 async def get_permission(permission_id: UUID, db: DbSession):
     permission = await rbac_service.get_permission(permission_id, db)
     if permission is None:
@@ -90,27 +123,43 @@ async def get_permission(permission_id: UUID, db: DbSession):
     return permission
 
 
-@router.patch("/permissions/{permission_id}", response_model=PermissionResponse)
+@router.patch(
+    "/permissions/{permission_id}",
+    dependencies=[Depends(require_permission("permissions", PermissionAction.UPDATE))],
+    response_model=PermissionResponse,
+)
 async def update_permission(permission_id: UUID, payload: UpdatePermissionDto, db: DbSession):
     permission = await rbac_service.update_permission(permission_id, payload, db)
     await db.commit()
     return permission
 
 
-@router.delete("/permissions/{permission_id}", response_model=MessageResponse)
+@router.delete(
+    "/permissions/{permission_id}",
+    dependencies=[Depends(require_permission("permissions", PermissionAction.DELETE))],
+    response_model=MessageResponse,
+)
 async def delete_permission(permission_id: UUID, db: DbSession):
     await rbac_service.delete_permission(permission_id, db)
     await db.commit()
     return {"message": "Permission deleted successfully"}
 
 
-@router.get("/roles/{role_id}/permissions", response_model=RolePermissionListResponse)
+@router.get(
+    "/roles/{role_id}/permissions",
+    dependencies=[Depends(require_permission("roles", PermissionAction.READ))],
+    response_model=RolePermissionListResponse,
+)
 async def list_role_permissions(role_id: UUID, db: DbSession):
     permissions = await rbac_service.list_role_permissions(role_id, db)
     return {"permissions": permissions}
 
 
-@router.post("/roles/{role_id}/permissions", response_model=RolePermissionResponse)
+@router.post(
+    "/roles/{role_id}/permissions",
+    dependencies=[Depends(require_permission("roles", PermissionAction.UPDATE))],
+    response_model=RolePermissionResponse,
+)
 async def assign_permission_to_role(
     role_id: UUID,
     payload: RolePermissionAssignRequest,
@@ -130,6 +179,7 @@ async def assign_permission_to_role(
 
 @router.delete(
     "/roles/{role_id}/permissions/{permission_id}",
+    dependencies=[Depends(require_permission("roles", PermissionAction.UPDATE))],
     response_model=MessageResponse,
 )
 async def remove_permission_from_role(role_id: UUID, permission_id: UUID, db: DbSession):
@@ -145,3 +195,6 @@ async def get_my_permissions(request: Request, db: DbSession):
         db=db,
     )
     return {"permissions": permissions}
+
+
+__all__ = ["router"]

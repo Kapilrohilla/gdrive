@@ -1,9 +1,11 @@
+import uuid
 from datetime import datetime, timezone
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enum import IdentifierType, IdentityStatus
 from app.models.iam.identity import Identity
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class IdentityService:
@@ -57,3 +59,8 @@ class IdentityService:
 
     def is_identity_active(self, identity: Identity) -> bool:
         return identity.status == IdentityStatus.ACTIVE
+
+    async def get_identity_by_id(self, identity_id: uuid.UUID, db: AsyncSession) -> Identity | None:
+        stmt = select(Identity).where(Identity.id == identity_id)
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()

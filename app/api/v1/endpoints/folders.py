@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends
 
 from app.api.deps import DbSession
 from app.constants.enum import TokenType
-from app.middleware import authenticate
+from app.middleware import authenticate, require_permission
+from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.folders import CreateFolderRequest, FolderMessageResponse
 from app.services.folder import folder_service
 
@@ -13,7 +14,11 @@ router = APIRouter(
 )
 
 
-@router.post("/", response_model=FolderMessageResponse)
+@router.post(
+    "/",
+    dependencies=[Depends(require_permission("folders", PermissionAction.CREATE))],
+    response_model=FolderMessageResponse,
+)
 async def create_folder(payload: CreateFolderRequest, db: DbSession):
     service_response = await folder_service.create_folder(
         name=payload.name,
@@ -28,7 +33,11 @@ async def create_folder(payload: CreateFolderRequest, db: DbSession):
     }
 
 
-@router.get("/", response_model=FolderMessageResponse)
+@router.get(
+    "/",
+    dependencies=[Depends(require_permission("folders", PermissionAction.READ))],
+    response_model=FolderMessageResponse,
+)
 async def get_folder(
     db: DbSession,
     user_id: str | None = None,
@@ -40,3 +49,6 @@ async def get_folder(
         "message": "Fetched successfully",
         "data": service_response,
     }
+
+
+__all__ = ["router"]
