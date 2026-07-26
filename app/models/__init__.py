@@ -15,6 +15,7 @@ from app.models.iam import (
     UserStatus,
     Visitor,
 )
+from app.models.outbox import Outbox
 
 __all__ = [
     "AuthEvent",
@@ -22,6 +23,7 @@ __all__ = [
     "Files",
     "FileStatus",
     "Folder",
+    "Outbox",
     "Identity",
     "IdentityProvider",
     "IdentityStatus",

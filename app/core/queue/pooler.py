@@ -4,10 +4,10 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import get_db
 from app.constants.enum import OutboxStatus
 from app.core.queue import enqueue
 from app.models.outbox import Outbox
-from backend.app.api.deps import get_db
 
 
 async def initialize_pooler(db: AsyncSession = Depends(get_db)):
@@ -25,10 +25,7 @@ async def initialize_pooler(db: AsyncSession = Depends(get_db)):
 async def fetch_pending_events(db: AsyncSession, limit: int = 100):
     stmt = (
         select(Outbox)
-        .select_from(Outbox)
-        .where(
-            Outbox.status == OutboxStatus.PENDING,
-        )
+        .where(Outbox.status == OutboxStatus.PENDING)
         .order_by(Outbox.created_at)
         .limit(limit)
     )

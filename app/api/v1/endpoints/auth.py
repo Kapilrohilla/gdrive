@@ -47,9 +47,7 @@ identity_user_visitor_service = IdentityUserVisitorService(
     dependencies=[Depends(authenticate(TokenType.GUEST))],
     response_model=AuthTokenResponse,
 )
-async def register_me(
-    request: Request, payload: RegisterUserPayload, db: DbSession
-):
+async def register_me(request: Request, payload: RegisterUserPayload, db: DbSession):
     visitor_id = UUID(str(request.state.visitor_id))
 
     user, identity, visitor = await identity_user_visitor_service.register_user(

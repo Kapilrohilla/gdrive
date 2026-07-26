@@ -17,6 +17,17 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=clouddrive
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - 15672:15672
+      - 5672:5672
+    volumes:
+      - ./.data/rabbitmq:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+
 volumes:
   redis_data:
   postgres_data:

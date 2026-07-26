@@ -1,8 +1,5 @@
 import uuid
 
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from app.constants.enum import IdentityProvider, UserStatus
 from app.models.iam.auth_events import AuthEventSubject
 from app.schemas.endpoints.auth import LoginUserPayload, RegisterUserPayload
@@ -10,6 +7,9 @@ from app.services.iam.auth_event import AuthEventService
 from app.services.iam.identity import IdentityService
 from app.services.iam.visitors import VisitorService
 from app.services.user import UserService
+from app.services.utils.hashing import HashingService
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class IdentityUserVisitorService:
@@ -24,6 +24,7 @@ class IdentityUserVisitorService:
         self.user_service = user_service
         self.visitor_service = visitor_service
         self.auth_event_service = auth_event_service
+        self.hashing_service = HashingService()
 
     async def register_user(
         self, visitor_id: uuid.UUID, payload: RegisterUserPayload, db: AsyncSession
@@ -51,7 +52,7 @@ class IdentityUserVisitorService:
 
         secret_hash = None
         if payload.provider == IdentityProvider.LOCAL and payload.identifier_value:
-            secret_hash = payload.identifier_value
+            secret_hash = self.hashing_service.hash(payload.identifier_value)
 
         user = await self.user_service.create_user(
             db=db,
@@ -68,6 +69,7 @@ class IdentityUserVisitorService:
             identifier_type=payload.identifier_type,
             secret_hash=secret_hash,
         )
+
         await self.visitor_service.link_visitor_to_user(
             visitor_id=visitor_id,
             user_id=user.id,
@@ -90,9 +92,7 @@ class IdentityUserVisitorService:
 
         return user, identity, visitor
 
-    async def login_user(
-        self, visitor_id: uuid.UUID, payload: LoginUserPayload, db: AsyncSession
-    ):
+    async def login_user(self, visitor_id: uuid.UUID, payload: LoginUserPayload, db: AsyncSession):
         visitor = await self.visitor_service.get_visitor_by_id(visitor_id, db)
         if visitor is None:
             raise HTTPException(status_code=404, detail="Visitor not found")

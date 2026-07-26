@@ -118,9 +118,7 @@ class AuthSessionService:
                 failure_reason="Invalid refresh token",
             )
             await db.commit()
-            raise HTTPException(
-                status_code=401, detail="Invalid refresh token"
-            ) from exc
+            raise HTTPException(status_code=401, detail="Invalid refresh token") from exc
 
         if session.user_id != user_id or session.identity_id != identity_id:
             await self.auth_event_service.record(

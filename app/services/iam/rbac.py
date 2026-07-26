@@ -20,11 +20,7 @@ class RbacService:
         return list(result.scalars().all())
 
     async def get_role(self, role_id: uuid.UUID, db: AsyncSession) -> Role | None:
-        stmt = (
-            select(Role)
-            .options(selectinload(Role.permissions))
-            .where(Role.id == role_id)
-        )
+        stmt = select(Role).options(selectinload(Role.permissions)).where(Role.id == role_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -63,9 +59,7 @@ class RbacService:
         if role is None:
             raise HTTPException(status_code=404, detail="Role not found")
         if role.is_system:
-            raise HTTPException(
-                status_code=400, detail="System roles cannot be deleted"
-            )
+            raise HTTPException(status_code=400, detail="System roles cannot be deleted")
 
         await db.delete(role)
         await db.flush()
@@ -75,16 +69,12 @@ class RbacService:
         result = await db.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_permission(
-        self, permission_id: uuid.UUID, db: AsyncSession
-    ) -> Permission | None:
+    async def get_permission(self, permission_id: uuid.UUID, db: AsyncSession) -> Permission | None:
         stmt = select(Permission).where(Permission.id == permission_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def create_permission(
-        self, payload: CreatePermissionDto, db: AsyncSession
-    ) -> Permission:
+    async def create_permission(self, payload: CreatePermissionDto, db: AsyncSession) -> Permission:
         permission = Permission(
             name=payload.name,
             resource=payload.resource,
@@ -117,9 +107,7 @@ class RbacService:
         await db.refresh(permission)
         return permission
 
-    async def delete_permission(
-        self, permission_id: uuid.UUID, db: AsyncSession
-    ) -> None:
+    async def delete_permission(self, permission_id: uuid.UUID, db: AsyncSession) -> None:
         permission = await self.get_permission(permission_id, db)
         if permission is None:
             raise HTTPException(status_code=404, detail="Permission not found")
@@ -127,9 +115,7 @@ class RbacService:
         await db.delete(permission)
         await db.flush()
 
-    async def list_role_permissions(
-        self, role_id: uuid.UUID, db: AsyncSession
-    ) -> list[Permission]:
+    async def list_role_permissions(self, role_id: uuid.UUID, db: AsyncSession) -> list[Permission]:
         role = await self.get_role(role_id, db)
         if role is None:
             raise HTTPException(status_code=404, detail="Role not found")
@@ -180,9 +166,7 @@ class RbacService:
         await db.delete(role_permission)
         await db.flush()
 
-    async def get_user_permissions(
-        self, user_id: uuid.UUID, db: AsyncSession
-    ) -> list[Permission]:
+    async def get_user_permissions(self, user_id: uuid.UUID, db: AsyncSession) -> list[Permission]:
         stmt = (
             select(User)
             .options(selectinload(User.role).selectinload(Role.permissions))

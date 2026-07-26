@@ -35,9 +35,7 @@ def _extract_bearer_token(request: Request) -> str:
     return bearer_token
 
 
-async def _touch_visitor_last_seen(
-    visitor_id: UUID | str | None, db: AsyncSession
-) -> None:
+async def _touch_visitor_last_seen(visitor_id: UUID | str | None, db: AsyncSession) -> None:
     if visitor_id is None:
         return
     await visitor_service.touch_last_seen_at(UUID(str(visitor_id)), db)

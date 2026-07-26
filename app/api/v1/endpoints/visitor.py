@@ -15,9 +15,7 @@ router = APIRouter(prefix="/visitor", tags=["Visitor"])
 
 visitor_service = VisitorService()
 jwt_utils = JwtUtils()
-visitor_jwt_service = VisitorJwtService(
-    visitor_service=visitor_service, jwt_utils=jwt_utils
-)
+visitor_jwt_service = VisitorJwtService(visitor_service=visitor_service, jwt_utils=jwt_utils)
 
 
 @router.get(

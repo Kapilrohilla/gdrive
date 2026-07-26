@@ -23,16 +23,12 @@ class VisitorService:
 
         return {"visitors": visitors, "total": count_stmt_response}
 
-    async def get_visitor_by_id(
-        self, visitor_id: uuid.UUID, db: AsyncSession
-    ) -> Visitor | None:
+    async def get_visitor_by_id(self, visitor_id: uuid.UUID, db: AsyncSession) -> Visitor | None:
         stmt = select(Visitor).where(Visitor.id == visitor_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def register_visitor(
-        self, identifier_type: str, identifier_value: str, db: AsyncSession
-    ):
+    async def register_visitor(self, identifier_type: str, identifier_value: str, db: AsyncSession):
         stmt = select(Visitor).where(
             Visitor.identifier_type == identifier_type,
             Visitor.identifier_value == identifier_value,

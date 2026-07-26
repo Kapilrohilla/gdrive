@@ -91,9 +91,7 @@ async def get_permission(permission_id: UUID, db: DbSession):
 
 
 @router.patch("/permissions/{permission_id}", response_model=PermissionResponse)
-async def update_permission(
-    permission_id: UUID, payload: UpdatePermissionDto, db: DbSession
-):
+async def update_permission(permission_id: UUID, payload: UpdatePermissionDto, db: DbSession):
     permission = await rbac_service.update_permission(permission_id, payload, db)
     await db.commit()
     return permission
@@ -134,9 +132,7 @@ async def assign_permission_to_role(
     "/roles/{role_id}/permissions/{permission_id}",
     response_model=MessageResponse,
 )
-async def remove_permission_from_role(
-    role_id: UUID, permission_id: UUID, db: DbSession
-):
+async def remove_permission_from_role(role_id: UUID, permission_id: UUID, db: DbSession):
     await rbac_service.remove_permission_from_role(role_id, permission_id, db)
     await db.commit()
     return {"message": "Permission removed from role successfully"}

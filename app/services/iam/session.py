@@ -32,16 +32,12 @@ class SessionService:
         await db.flush()
         return session
 
-    async def get_session_by_id(
-        self, session_id: uuid.UUID, db: AsyncSession
-    ) -> Session | None:
+    async def get_session_by_id(self, session_id: uuid.UUID, db: AsyncSession) -> Session | None:
         stmt = select(Session).where(Session.id == session_id)
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def get_active_session(
-        self, session_id: uuid.UUID, db: AsyncSession
-    ) -> Session | None:
+    async def get_active_session(self, session_id: uuid.UUID, db: AsyncSession) -> Session | None:
         session = await self.get_session_by_id(session_id, db)
         if session is None:
             return None
@@ -85,9 +81,7 @@ class SessionService:
         )
         await db.execute(stmt)
 
-    async def revoke_session(
-        self, session_id: uuid.UUID, db: AsyncSession
-    ) -> Session | None:
+    async def revoke_session(self, session_id: uuid.UUID, db: AsyncSession) -> Session | None:
         session = await self.get_session_by_id(session_id, db)
         if session is None or session.revoked_at is not None:
             return session
@@ -125,8 +119,7 @@ class SessionService:
         if session.revoked_at is not None:
             return False
         return not (
-            session.expires_at is not None
-            and session.expires_at <= datetime.now(timezone.utc)
+            session.expires_at is not None and session.expires_at <= datetime.now(timezone.utc)
         )
 
     @staticmethod

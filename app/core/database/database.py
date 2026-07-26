@@ -1,6 +1,6 @@
+import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime
-import uuid
 
 from fastapi import FastAPI
 from sqlalchemy import func
@@ -18,9 +18,7 @@ class Base(DeclarativeBase):
         default=uuid.uuid4,
     )
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(
-        server_default=func.now(), onupdate=func.now()
-    )
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now(), onupdate=func.now())
 
 
 engine = create_async_engine(

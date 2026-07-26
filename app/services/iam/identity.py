@@ -38,9 +38,7 @@ class IdentityService:
         await db.flush()
         return identity
 
-    async def record_successful_login(
-        self, identity: Identity, db: AsyncSession
-    ) -> Identity:
+    async def record_successful_login(self, identity: Identity, db: AsyncSession) -> Identity:
         identity.last_login_at = datetime.now(timezone.utc)
         identity.consecutive_failed_count = 0
         db.add(identity)
@@ -52,9 +50,7 @@ class IdentityService:
         db.add(identity)
         await db.flush()
 
-    def verify_local_credentials(
-        self, identity: Identity, identifier_value: str
-    ) -> bool:
+    def verify_local_credentials(self, identity: Identity, identifier_value: str) -> bool:
         if identity.secret_hash is None:
             return False
         return identity.secret_hash == identifier_value

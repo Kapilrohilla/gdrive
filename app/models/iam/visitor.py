@@ -13,9 +13,7 @@ from app.core.database import Base
 class Visitor(Base):
     __tablename__ = "visitors"
     __table_args__ = (
-        UniqueConstraint(
-            "identifier_type", "identifier_value", name="uix_visitor_identifier"
-        ),
+        UniqueConstraint("identifier_type", "identifier_value", name="uix_visitor_identifier"),
     )
 
     identifier_type: Mapped[str] = mapped_column(String(100), nullable=False)

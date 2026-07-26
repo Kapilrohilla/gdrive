@@ -56,9 +56,7 @@ class JwtUtils:
             "visitor_id": str(visitor_id),
             "exp": expired_at,
         }
-        encoded_jwt = jwt.encode(
-            payload=jwt_payload, key=settings.jwt_secret, algorithm=JWT_ALGO
-        )
+        encoded_jwt = jwt.encode(payload=jwt_payload, key=settings.jwt_secret, algorithm=JWT_ALGO)
         return encoded_jwt, expired_at
 
     def _generate_access_token(
@@ -79,9 +77,7 @@ class JwtUtils:
             "session_id": str(session_id),
             "exp": expired_at,
         }
-        encoded_jwt = jwt.encode(
-            payload=jwt_payload, key=settings.jwt_secret, algorithm=JWT_ALGO
-        )
+        encoded_jwt = jwt.encode(payload=jwt_payload, key=settings.jwt_secret, algorithm=JWT_ALGO)
         return encoded_jwt, expired_at
 
     def _generate_refresh_token(
@@ -102,27 +98,16 @@ class JwtUtils:
             "session_id": str(session_id),
             "exp": expired_at,
         }
-        encoded_jwt = jwt.encode(
-            payload=jwt_payload, key=settings.jwt_secret, algorithm=JWT_ALGO
-        )
+        encoded_jwt = jwt.encode(payload=jwt_payload, key=settings.jwt_secret, algorithm=JWT_ALGO)
         return encoded_jwt, expired_at
 
     def verify_token(self, token_type: TokenType, token: str) -> dict:
         data = jwt.decode(token, settings.jwt_secret, algorithms=[JWT_ALGO])
 
         if (
-            (
-                token_type == TokenType.GUEST
-                and data.get("token_type") != TokenType.GUEST
-            )
-            or (
-                token_type == TokenType.ACCESS
-                and data.get("token_type") != TokenType.ACCESS
-            )
-            or (
-                token_type == TokenType.REFRESH
-                and data.get("token_type") != TokenType.REFRESH
-            )
+            (token_type == TokenType.GUEST and data.get("token_type") != TokenType.GUEST)
+            or (token_type == TokenType.ACCESS and data.get("token_type") != TokenType.ACCESS)
+            or (token_type == TokenType.REFRESH and data.get("token_type") != TokenType.REFRESH)
         ):
             raise ValueError("Invalid token type")
 
