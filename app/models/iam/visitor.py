@@ -7,7 +7,7 @@ from sqlalchemy.dialects.postgresql import JSON, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
 
-from app.core.database import Base
+from app.core.database.database import Base
 
 
 class Visitor(Base):

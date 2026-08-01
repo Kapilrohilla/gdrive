@@ -5,13 +5,15 @@ from app.constants.enum import TokenType
 from app.middleware import authenticate, require_permission
 from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.folders import CreateFolderRequest, FolderMessageResponse
-from app.services.folder import folder_service
+from app.services.drive.folder import FolderService
 
 router = APIRouter(
     prefix="/folders",
     tags=["Folder"],
     dependencies=[Depends(authenticate(TokenType.ACCESS))],
 )
+
+folder_service = FolderService()
 
 
 @router.post(

@@ -1,16 +1,17 @@
 import datetime
 
 from sqlalchemy import JSON, DateTime, Enum as SQLEnum, Integer, String, Text
+from sqlalchemy.dialects.postgresql.named_types import EnumGenerator
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.constants.enum import AggregateType, OutboxStatus
+from app.constants.enum import AggregateType, OutboxStatus, OutboxTopics
 from app.core.database.database import Base
 
 
 class Outbox(Base):
     __tablename__ = "outbox_events"
 
-    event_name: Mapped[str] = mapped_column(String(length=255))
+    topic: Mapped[OutboxTopics] = mapped_column(EnumGenerator(OutboxTopics, name="outbox_topics"))
     aggregate_type: Mapped[AggregateType] = mapped_column(
         SQLEnum(AggregateType, name="aggregate_type"),
         nullable=False,

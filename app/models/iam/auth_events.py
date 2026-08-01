@@ -1,11 +1,12 @@
 import uuid
 from enum import Enum
 
-from sqlalchemy import Boolean, Enum as SQLEnum, ForeignKey, Text
+from sqlalchemy import Boolean, ForeignKey, Text
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.core.database import Base
+from app.core.database.database import Base
 
 
 class AuthEventSubject(str, Enum):

@@ -4,7 +4,7 @@ from sqlalchemy import Enum as SQLEnum, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String
 
-from app.core.database import Base
+from app.core.database.database import Base
 
 
 class PermissionAction(str, Enum):

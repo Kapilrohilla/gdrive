@@ -41,4 +41,4 @@ class FolderService:
         return result.scalars().all()
 
 
-folder_service = FolderService()
+__all__ = ["FolderService"]

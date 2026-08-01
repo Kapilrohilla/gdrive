@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router
+from app.api.v1.endpoints import short_url
 from app.config import settings
 from app.core.database import lifespan
 
@@ -16,6 +17,7 @@ app.add_middleware(
 )
 
 app.include_router(api_router)
+app.include_router(short_url.router)
 
 
 @app.get("/health")

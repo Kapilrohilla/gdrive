@@ -1,5 +1,5 @@
-from app.models.file import Files, FileStatus
-from app.models.folder import Folder
+from app.models.drive.files import Files
+from app.models.drive.folder import Folder
 from app.models.iam import (
     AuthEvent,
     AuthEventSubject,
@@ -16,12 +16,13 @@ from app.models.iam import (
     Visitor,
 )
 from app.models.outbox import Outbox
+from app.models.resource_events import ResourceEvents
+from app.models.short_urls import ShortUrls
 
 __all__ = [
     "AuthEvent",
     "AuthEventSubject",
     "Files",
-    "FileStatus",
     "Folder",
     "Outbox",
     "Identity",
@@ -35,4 +36,6 @@ __all__ = [
     "User",
     "UserStatus",
     "Visitor",
+    "ShortUrls",
+    "ResourceEvents",
 ]

@@ -2,6 +2,7 @@ import datetime
 import uuid
 
 import jwt
+
 from app.config import settings
 from app.constants.enum import TokenType
 

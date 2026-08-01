@@ -1,13 +1,12 @@
 import uuid
 
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import Enum as SQLEnum, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.types import String
 
 from app.constants.enum import UserStatus
-from app.core.database import Base
+from app.core.database.database import Base
 
 
 class User(Base):
@@ -33,3 +32,4 @@ class User(Base):
     sessions = relationship("Session", back_populates="user")
     auth_events = relationship("AuthEvent", back_populates="user")
     visitors = relationship("Visitor", back_populates="user")
+    short_urls = relationship("ShortUrls", back_populates="user")
