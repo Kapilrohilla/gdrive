@@ -102,25 +102,51 @@ class FileService:
             }
 
         exists = False
+        file_size = data.size
         try:
-            s3_client.head_object(
+            response = s3_client.head_object(
                 Bucket=settings.aws_s3_bucket,
                 Key=data.storage_path,
             )
             exists = True
+            file_size = response.get("ContentLength", data.size)
         except ClientError as e:
             if e.response["Error"]["Code"] == "404":
                 exists = False
             else:
                 raise
 
-        stmt = update(Files).where(Files.id == id).values(status=FileStatus.READY)
+        if not exists:
+            return {
+                "is_valid": False,
+                "message": "Not uploaded",
+            }
 
+        stmt = update(Files).where(Files.id == id).values(
+            status=FileStatus.READY,
+            size=file_size,
+        )
         await db.execute(stmt)
+
+        await outbox_service.send_message(
+            db=db,
+            message=OutboxMessage(
+                topic=OutboxTopics.GENERATE_FILE_THUMBNAIL,
+                aggregate_type=AggregateType.FILE,
+                aggregate_id=str(data.id),
+                payload={
+                    "id": str(data.id),
+                    "storage_path": data.storage_path,
+                    "size": file_size,
+                    "extension": data.extension,
+                },
+            ),
+        )
         await db.commit()
+
         return {
-            "is_valid": exists,
-            "message": "uploaded" if exists else "Not uploaded",
+            "is_valid": True,
+            "message": "uploaded",
         }
 
     async def get_files(self, db: DbSession, folder_id: str | None = None) -> list[Files]:

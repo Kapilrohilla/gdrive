@@ -52,7 +52,7 @@ Interactive docs: `http://127.0.0.1:5000/docs`
 
 ## API overview (mounted routes)
 
-All routes are prefixed with `/api`.
+All routes are prefixed with `/api`, except short URL routes mounted at `/s/*`.
 
 | Method | Path | Auth | Description |
 | --- | --- | --- | --- |
@@ -83,8 +83,16 @@ All routes are prefixed with `/api`.
 | `POST` | `/users/` | Access JWT | Create user |
 | `POST` | `/folders/` | Access JWT | Create folder |
 | `GET` | `/folders/` | Access JWT | List folders |
-| `POST` | `/files/gen_upload_link` | Access JWT | Generate S3 presigned upload URL |
-| `POST` | `/files/mark_upload_complete` | Access JWT | Mark file upload complete |
+| `POST` | `/files/gen_upload_link` | Access JWT + RBAC | Generate S3 presigned upload URL |
+| `POST` | `/files/mark_upload_complete` | Access JWT + RBAC | Mark file upload complete; emits thumbnail outbox event |
+| `GET` | `/files/` | Access JWT + RBAC | List ready files (optional `folder_id`) |
+| `GET` | `/files/{file_id}` | Access JWT + RBAC | Get file metadata |
+| `GET` | `/files/{file_id}/preview` | Access JWT + RBAC | Presigned inline preview URL |
+| `GET` | `/files/{file_id}/download` | Access JWT + RBAC | Presigned download URL |
+| `GET` | `/files/{file_id}/activity` | Access JWT + RBAC | File activity timeline |
+| `POST` | `/s/shorten` | Access JWT | Create short URL |
+| `GET` | `/s/` | Access JWT | List current user's short URLs |
+| `GET` | `/s/{short_code}` | — | Redirect to original URL |
 
 ### Auth flow
 
@@ -107,16 +115,16 @@ All other mounted API routes require an **access JWT** unless noted (refresh use
 
 ```
 app/
-├── api/v1/endpoints/     auth, rbac, visitor, users, folders, files
-├── middleware/           JWT authenticate dependencies + session validation
-├── models/               files, folders, outbox
+├── api/v1/endpoints/     auth, rbac, visitor, users, folders, files, short_url
+├── middleware/           JWT authenticate + RBAC permission dependencies
+├── models/               files, folders, outbox, resource_events, short_urls
 ├── models/iam/           user, identity, session, visitor, role, permission, auth_events
-├── services/             files, folder, user, iam/, utils/
+├── services/             drive/, iam/, resource_events, short_urls, utils/
 ├── schemas/
 │   ├── endpoints/        API request/response schemas (per endpoint)
 │   └── iam/              Domain DTOs
-├── constants/            Shared enums
-└── core/                 database, security (token hashing)
+├── constants/            Shared enums (OutboxTopics, ResourceEventActions, etc.)
+└── core/                 database, queue/pooler, security (token hashing)
 ```
 
 ## Long-term goal

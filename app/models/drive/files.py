@@ -43,6 +43,11 @@ class Files(Base):
     extension: Mapped[str] = mapped_column(
         String(100),
     )
+    
+    thumbnail_path: Mapped[str | None] = mapped_column(
+        Text(),
+        nullable=True,
+    )
 
     # will be used to transfer storage_type from on-demand to glacier storage path
     last_accessed_at: Mapped[datetime] = mapped_column(

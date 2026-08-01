@@ -62,8 +62,7 @@ class ResourceEventResourceType(StrEnum):
 
 class OutboxTopics(StrEnum):
     CREATE_RESOURCE_EVENT = "create_resource_event"
-
-
+    GENERATE_FILE_THUMBNAIL = "generate_file_thumbnail"
 
 class ResourceEventActions(StrEnum):
     CREATED = "created"
