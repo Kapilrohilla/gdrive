@@ -1,7 +1,9 @@
 from datetime import datetime
-from typing import Any
+import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.constants.enum import UserStatus
 
 
 class CreateUserRequest(BaseModel):
@@ -10,5 +12,19 @@ class CreateUserRequest(BaseModel):
 
 class CreateUserResponse(BaseModel):
     message: str
-    data: Any
+    data: object
+    timestamp: datetime
+
+
+class UserProfileResponse(BaseModel):
+    id: uuid.UUID
+    full_name: str | None
+    email: str
+    avatar: str | None
+    status: UserStatus
+
+
+class GetUserProfileResponse(BaseModel):
+    message: str
+    data: UserProfileResponse
     timestamp: datetime

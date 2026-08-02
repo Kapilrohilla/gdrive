@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from app.core.security import hash_refresh_token, verify_refresh_token
 from app.models.iam.session import Session
@@ -14,6 +14,7 @@ class SessionService:
         db: AsyncSession,
         user_id: uuid.UUID,
         identity_id: uuid.UUID,
+        visitor_id: uuid.UUID,
         refresh_token: str,
         expires_at: datetime,
         user_agent: str | None = None,
@@ -22,6 +23,7 @@ class SessionService:
         session = Session(
             user_id=user_id,
             identity_id=identity_id,
+            visitor_id=visitor_id,
             refresh_token_hash=hash_refresh_token(refresh_token),
             user_agent=user_agent,
             ip=ip,
@@ -122,6 +124,18 @@ class SessionService:
             session.expires_at is not None and session.expires_at <= datetime.now(timezone.utc)
         )
 
+    async def get_visitor_linked_user_id(
+        self, visitor_id: uuid.UUID, db: AsyncSession
+    ) -> uuid.UUID | None:
+        stmt = (
+            select(Session.user_id)
+            .where(Session.visitor_id == visitor_id)
+            .order_by(Session.created_at.asc())
+            .limit(1)
+        )
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
+
     @staticmethod
     def default_refresh_expiry() -> datetime:
-        return datetime.now(timezone.utc) + datetime.timedelta(days=REFRESH_EXPIRY_DAYS)
+        return datetime.now(timezone.utc) + timedelta(days=REFRESH_EXPIRY_DAYS)

@@ -1,9 +1,8 @@
-import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, UniqueConstraint, func
-from sqlalchemy.dialects.postgresql import JSON, UUID
+from sqlalchemy import DateTime, UniqueConstraint, func
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
 
@@ -38,10 +37,4 @@ class Visitor(Base):
         nullable=True,
     )
 
-    user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id"),
-        nullable=True,
-    )
-
-    user = relationship("User", back_populates="visitors")
+    sessions = relationship("Session", back_populates="visitor")

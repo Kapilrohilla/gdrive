@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
+from sqlalchemy.types import Integer
 
 from app.core.database.database import Base
 
@@ -29,6 +30,8 @@ class Folder(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id"),
     )
+
+    file_count: Mapped[int] = mapped_column(Integer(), default=0)
 
     parent = relationship("Folder")
     owner = relationship("User")

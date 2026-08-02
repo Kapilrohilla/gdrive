@@ -39,7 +39,7 @@ auth_session_service = AuthSessionService(
     auth_event_service,
 )
 identity_user_visitor_service = IdentityUserVisitorService(
-    identity_service, user_service, visitor_service, auth_event_service
+    identity_service, user_service, visitor_service, session_service, auth_event_service
 )
 
 

@@ -47,18 +47,6 @@ class VisitorService:
 
         return existing_visitor
 
-    async def link_visitor_to_user(
-        self, visitor_id: uuid.UUID, user_id: uuid.UUID, db: AsyncSession
-    ) -> Visitor:
-        visitor = await self.get_visitor_by_id(visitor_id, db)
-        if visitor is None:
-            raise ValueError(f"Visitor {visitor_id} not found")
-
-        visitor.user_id = user_id
-        db.add(visitor)
-        await db.flush()
-        return visitor
-
     async def touch_last_seen_at(self, visitor_id: uuid.UUID, db: AsyncSession) -> None:
         visitor = await self.get_visitor_by_id(visitor_id, db)
         if visitor is None:

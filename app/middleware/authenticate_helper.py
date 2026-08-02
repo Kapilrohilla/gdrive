@@ -65,6 +65,10 @@ async def authenticate_access_dependency(request: Request, db: DbSession):
         if session is None:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
+        payload_visitor_id = _parse_uuid(payload.get("visitor_id"))
+        if payload_visitor_id is None or session.visitor_id != payload_visitor_id:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
         request.state.user_id = payload.get("user_id")
         request.state.identity_id = payload.get("identity_id")
         request.state.visitor_id = payload.get("visitor_id")
@@ -95,6 +99,10 @@ async def authenticate_refresh_dependency(request: Request, db: DbSession):
 
         session = await session_service.get_active_session(session_id, db)
         if session is None:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+
+        payload_visitor_id = _parse_uuid(payload.get("visitor_id"))
+        if payload_visitor_id is None or session.visitor_id != payload_visitor_id:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
         request.state.user_id = payload.get("user_id")

@@ -15,7 +15,6 @@ class VisitorItemResponse(BaseModel):
     id: uuid.UUID
     identifier_type: str
     identifier_value: str
-    user_id: uuid.UUID | None
     first_seen_at: datetime
     last_seen_at: datetime
     created_at: datetime

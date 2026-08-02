@@ -47,6 +47,7 @@ class AuthSessionService:
             db=db,
             user_id=user.id,
             identity_id=identity.id,
+            visitor_id=visitor.id,
             refresh_token=provisional_refresh,
             expires_at=refresh_expires_at,
             user_agent=request.headers.get("user-agent") if request else None,
@@ -129,6 +130,19 @@ class AuthSessionService:
                 identity_id=identity_id,
                 session_id=session_id,
                 failure_reason="Token claims mismatch",
+            )
+            await db.commit()
+            raise HTTPException(status_code=401, detail="Invalid refresh token")
+
+        if session.visitor_id != visitor_id:
+            await self.auth_event_service.record(
+                db=db,
+                subject=AuthEventSubject.SESSION_REVOKED,
+                success=False,
+                user_id=user_id,
+                identity_id=identity_id,
+                session_id=session_id,
+                failure_reason="Visitor mismatch",
             )
             await db.commit()
             raise HTTPException(status_code=401, detail="Invalid refresh token")

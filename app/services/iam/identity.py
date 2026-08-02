@@ -6,9 +6,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enum import IdentifierType, IdentityStatus
 from app.models.iam.identity import Identity
+from app.services.utils.hashing import HashingService
 
 
 class IdentityService:
+    def __init__(self):
+        self.hashing_service = HashingService()
+
     async def get_identity_by_identifier(
         self,
         identifier: str,
@@ -52,10 +56,10 @@ class IdentityService:
         db.add(identity)
         await db.flush()
 
-    def verify_local_credentials(self, identity: Identity, identifier_value: str) -> bool:
+    def verify_local_credentials(self, identity: Identity, password: str) -> bool:
         if identity.secret_hash is None:
             return False
-        return identity.secret_hash == identifier_value
+        return self.hashing_service.verify(password, identity.secret_hash)
 
     def is_identity_active(self, identity: Identity) -> bool:
         return identity.status == IdentityStatus.ACTIVE

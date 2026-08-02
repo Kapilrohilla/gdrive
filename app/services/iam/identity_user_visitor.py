@@ -1,15 +1,17 @@
 import uuid
 
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.constants.enum import IdentityProvider, UserStatus
 from app.models.iam.auth_events import AuthEventSubject
 from app.schemas.endpoints.auth import LoginUserPayload, RegisterUserPayload
 from app.services.iam.auth_event import AuthEventService
 from app.services.iam.identity import IdentityService
+from app.services.iam.session import SessionService
 from app.services.iam.visitors import VisitorService
 from app.services.user import UserService
 from app.services.utils.hashing import HashingService
-from fastapi import HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class IdentityUserVisitorService:
@@ -18,11 +20,13 @@ class IdentityUserVisitorService:
         identity_service: IdentityService,
         user_service: UserService,
         visitor_service: VisitorService,
+        session_service: SessionService,
         auth_event_service: AuthEventService,
     ):
         self.identity_service = identity_service
         self.user_service = user_service
         self.visitor_service = visitor_service
+        self.session_service = session_service
         self.auth_event_service = auth_event_service
         self.hashing_service = HashingService()
 
@@ -33,7 +37,8 @@ class IdentityUserVisitorService:
         if visitor is None:
             raise HTTPException(status_code=404, detail="Visitor not found")
 
-        if visitor.user_id is not None:
+        linked_user_id = await self.session_service.get_visitor_linked_user_id(visitor_id, db)
+        if linked_user_id is not None:
             raise HTTPException(
                 status_code=409,
                 detail="Visitor is already linked to a user",
@@ -51,8 +56,8 @@ class IdentityUserVisitorService:
             )
 
         secret_hash = None
-        if payload.provider == IdentityProvider.LOCAL and payload.identifier_value:
-            secret_hash = self.hashing_service.hash(payload.identifier_value)
+        if payload.provider == IdentityProvider.LOCAL:
+            secret_hash = self.hashing_service.hash(payload.password)
 
         user = await self.user_service.create_user(
             db=db,
@@ -68,12 +73,6 @@ class IdentityUserVisitorService:
             identifier=payload.identifier,
             identifier_type=payload.identifier_type,
             secret_hash=secret_hash,
-        )
-
-        await self.visitor_service.link_visitor_to_user(
-            visitor_id=visitor_id,
-            user_id=user.id,
-            db=db,
         )
 
         await self.auth_event_service.record(
@@ -112,22 +111,22 @@ class IdentityUserVisitorService:
             await db.commit()
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
-        if not self.identity_service.is_identity_active(identity):
-            await self.auth_event_service.record(
-                db=db,
-                subject=AuthEventSubject.LOGIN_FAILED,
-                success=False,
-                user_id=identity.user_id,
-                identity_id=identity.id,
-                failure_reason="Identity is not active",
-            )
-            await db.commit()
-            raise HTTPException(status_code=403, detail="Identity is not active")
+        # disable the status check for now - reason need to build the verification process system first
+        
+        # if not self.identity_service.is_identity_active(identity):
+        #     await self.auth_event_service.record(
+        #         db=db,
+        #         subject=AuthEventSubject.LOGIN_FAILED,
+        #         success=False,
+        #         user_id=identity.user_id,
+        #         identity_id=identity.id,
+        #         failure_reason="Identity is not active",
+        #     )
+        #     await db.commit()
+        #     raise HTTPException(status_code=403, detail="Identity is not active")
 
         if payload.provider == IdentityProvider.LOCAL:
-            if not self.identity_service.verify_local_credentials(
-                identity, payload.identifier_value
-            ):
+            if not self.identity_service.verify_local_credentials(identity, payload.password):
                 await self.identity_service.record_failed_login(identity, db)
                 await self.auth_event_service.record(
                     db=db,
@@ -156,13 +155,8 @@ class IdentityUserVisitorService:
             await db.commit()
             raise HTTPException(status_code=403, detail="User is not active")
 
-        if visitor.user_id is None:
-            await self.visitor_service.link_visitor_to_user(
-                visitor_id=visitor_id,
-                user_id=user.id,
-                db=db,
-            )
-        elif visitor.user_id != user.id:
+        linked_user_id = await self.session_service.get_visitor_linked_user_id(visitor_id, db)
+        if linked_user_id is not None and linked_user_id != user.id:
             await self.auth_event_service.record(
                 db=db,
                 subject=AuthEventSubject.LOGIN_FAILED,

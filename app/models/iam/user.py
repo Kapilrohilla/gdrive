@@ -31,5 +31,4 @@ class User(Base):
     identities = relationship("Identity", back_populates="user")
     sessions = relationship("Session", back_populates="user")
     auth_events = relationship("AuthEvent", back_populates="user")
-    visitors = relationship("Visitor", back_populates="user")
     short_urls = relationship("ShortUrls", back_populates="user")

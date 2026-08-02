@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class SessionBase(BaseModel):
     user_id: uuid.UUID
     identity_id: uuid.UUID
+    visitor_id: uuid.UUID
     refresh_token_hash: str
     device_name: str | None = Field(default=None, max_length=200)
     browser: str | None = Field(default=None, max_length=200)

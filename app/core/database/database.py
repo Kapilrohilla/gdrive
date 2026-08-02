@@ -40,5 +40,8 @@ async def lifespan(app: FastAPI):
         import app.models  # noqa: F401
 
         await conn.run_sync(Base.metadata.create_all)
+        from app.core.database.migrations import apply_schema_migrations
+
+        await conn.run_sync(apply_schema_migrations)
 
     yield

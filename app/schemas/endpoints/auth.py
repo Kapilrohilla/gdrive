@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.constants.enum import (
     IdentifierType,
@@ -16,17 +16,24 @@ class RegisterUserPayload(BaseModel):
     provider: IdentityProvider = IdentityProvider.LOCAL
     identifier_type: IdentifierType
     identifier: str = Field(min_length=1, max_length=500)
-    identifier_value: str | None = None
+    password: str = Field(min_length=8, max_length=128)
+    confirm_password: str = Field(min_length=8, max_length=128)
     full_name: str | None = None
     avatar: str | None = None
     role_id: uuid.UUID | None = None
+
+    @model_validator(mode="after")
+    def passwords_match(self):
+        if self.password != self.confirm_password:
+            raise ValueError("Passwords do not match")
+        return self
 
 
 class LoginUserPayload(BaseModel):
     provider: IdentityProvider = IdentityProvider.LOCAL
     identifier_type: IdentifierType
     identifier: str = Field(min_length=1, max_length=500)
-    identifier_value: str = Field(min_length=1)
+    password: str = Field(min_length=1, max_length=128)
 
 
 class AuthUserResponse(BaseModel):
@@ -60,7 +67,6 @@ class AuthVisitorResponse(BaseModel):
     id: uuid.UUID
     identifier_type: str
     identifier_value: str
-    user_id: uuid.UUID | None
     first_seen_at: datetime
     last_seen_at: datetime
     created_at: datetime

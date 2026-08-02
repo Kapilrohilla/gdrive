@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.folder import Folder
+from app.models.drive.folder import Folder
 
 
 class FolderService:

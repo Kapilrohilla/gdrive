@@ -23,6 +23,12 @@ class Session(Base):
         nullable=False,
     )
 
+    visitor_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("visitors.id"),
+        nullable=False,
+    )
+
     refresh_token_hash: Mapped[str] = mapped_column(Text(), nullable=False)
 
     device_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -52,4 +58,5 @@ class Session(Base):
 
     user = relationship("User", back_populates="sessions")
     identity = relationship("Identity", back_populates="sessions")
+    visitor = relationship("Visitor", back_populates="sessions")
     auth_events = relationship("AuthEvent", back_populates="session")

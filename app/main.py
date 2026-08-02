@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router
 from app.api.v1.endpoints import short_url
 from app.config import settings
-from app.core.database import lifespan
+from app.core.database.database import lifespan
 
 app = FastAPI(lifespan=lifespan, title="CloudDrive API")
 
