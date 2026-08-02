@@ -3,9 +3,11 @@ from typing import Any
 
 from sqlalchemy import DateTime, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSON
+from sqlalchemy.dialects.postgresql.named_types import EnumGenerator
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
 
+from app.constants.enum import VisitorAppType
 from app.core.database.database import Base
 
 
@@ -28,6 +30,8 @@ class Visitor(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+    app_type: Mapped[VisitorAppType] = mapped_column(EnumGenerator(VisitorAppType), nullable=False)
 
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
 

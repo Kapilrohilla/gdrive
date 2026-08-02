@@ -6,7 +6,8 @@ from fastapi.responses import RedirectResponse
 from app.api.deps import DbSession
 from app.config import settings
 from app.constants.enum import TokenType
-from app.middleware import authenticate
+from app.middleware import authenticate, require_permission
+from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.short_url import (
     ShortenUrlRequest,
     ShortenUrlResponse,
@@ -28,7 +29,10 @@ short_url_service = ShortUrlsService(encoding_service)
 
 @router.post(
     "/shorten",
-    dependencies=[Depends(authenticate(TokenType.ACCESS))],
+    dependencies=[
+        Depends(authenticate(TokenType.ACCESS)),
+        Depends(require_permission("short_urls", PermissionAction.CREATE)),
+    ],
     response_model=ShortenUrlResponse,
 )
 async def shorten(payload: ShortenUrlRequest, request: Request, db: DbSession):
@@ -39,10 +43,38 @@ async def shorten(payload: ShortenUrlRequest, request: Request, db: DbSession):
 
 @router.get(
     "/",
-    dependencies=[Depends(authenticate(TokenType.ACCESS))],
+    dependencies=[
+        Depends(authenticate(TokenType.ACCESS)),
+        Depends(require_permission("short_urls", PermissionAction.MANAGE)),
+    ],
     response_model=ShortUrlListResponse,
 )
-async def get_short_urls(request: Request, db: DbSession):
+async def get_short_urls(db: DbSession):
+    records = await short_url_service.get_short_urls(db, user_id=None)
+    return {
+        "short_urls": [
+            ShortUrlItem(
+                id=record.id,
+                original_url=record.original_url,
+                short_code=record.short_code,
+                short_url=f"{settings.host_url}{prefix}/{record.short_code}",
+                created_at=record.created_at,
+            )
+            for record in records
+            if record.short_code is not None
+        ]
+    }
+
+
+@router.get(
+    "/me",
+    dependencies=[
+        Depends(authenticate(TokenType.ACCESS)),
+        Depends(require_permission("short_urls", PermissionAction.READ)),
+    ],
+    response_model=ShortUrlListResponse,
+)
+async def get_my_short_urls(request: Request, db: DbSession):
     user_id = UUID(str(request.state.user_id))
     records = await short_url_service.get_short_urls(db, user_id)
     return {

@@ -149,10 +149,18 @@ class FileService:
             "message": "uploaded",
         }
 
-    async def get_files(self, db: DbSession, folder_id: str | None = None) -> list[Files]:
-        query = Select(Files).where(Files.status == FileStatus.READY)
-        if folder_id is not None:
-            query = query.where(Files.folder_id == folder_id)
+    async def get_files(
+        self, db: DbSession, folder_id: uuid.UUID | None = None
+    ) -> list[Files]:
+        query = (
+            Select(Files)
+            .where(Files.status == FileStatus.READY)
+            .order_by(Files.created_at.desc())
+        )
+        if folder_id is None:
+            query = query.where(Files.folder_id.is_(None))
+        else:
+            query = query.where(Files.folder_id == str(folder_id))
         query_response = await db.execute(query)
         return list(query_response.scalars().all())
 
@@ -188,6 +196,7 @@ class FileService:
         action: ResourceEventActions,
         url: str,
         user_agent: str | None,
+        actor_id: uuid.UUID | None = None,
     ) -> None:
         file.last_accessed_at = datetime.datetime.now(datetime.UTC)
         db.add(file)
@@ -202,6 +211,7 @@ class FileService:
                     "action": action,
                     "resource_id": str(file.id),
                     "resource_type": ResourceEventResourceType.FILE,
+                    "actor_id": str(actor_id) if actor_id is not None else None,
                     "metadata": {
                         "url": url,
                         "file_id": str(file.id),
@@ -220,6 +230,7 @@ class FileService:
         db: DbSession,
         id: uuid.UUID,
         user_agent: str | None = None,
+        actor_id: uuid.UUID | None = None,
     ) -> dict:
         file = await self.get_file(db, id)
 
@@ -236,6 +247,7 @@ class FileService:
             action=ResourceEventActions.VIEWED,
             url=url,
             user_agent=user_agent,
+            actor_id=actor_id,
         )
 
         return {
@@ -248,6 +260,7 @@ class FileService:
         db: DbSession,
         id: uuid.UUID,
         user_agent: str | None = None,
+        actor_id: uuid.UUID | None = None,
     ) -> dict:
         file = await self.get_file(db, id)
 
@@ -264,6 +277,7 @@ class FileService:
             action=ResourceEventActions.DOWNLOADED,
             url=url,
             user_agent=user_agent,
+            actor_id=actor_id,
         )
 
         return {

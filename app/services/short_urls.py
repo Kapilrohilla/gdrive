@@ -32,12 +32,15 @@ class ShortUrlsService:
 
         return short_code
 
-    async def get_short_urls(self, db: AsyncSession, user_id: uuid.UUID) -> list[ShortUrls]:
-        result = await db.execute(
-            select(ShortUrls)
-            .where(ShortUrls.user_id == user_id)
-            .order_by(ShortUrls.created_at.desc())
-        )
+    async def get_short_urls(
+        self,
+        db: AsyncSession,
+        user_id: uuid.UUID | None = None,
+    ) -> list[ShortUrls]:
+        query = select(ShortUrls).order_by(ShortUrls.created_at.desc())
+        if user_id is not None:
+            query = query.where(ShortUrls.user_id == user_id)
+        result = await db.execute(query)
         return list(result.scalars().all())
 
     async def resolve(self, db: AsyncSession, short_code: str) -> str | None:

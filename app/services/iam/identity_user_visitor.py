@@ -4,10 +4,12 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.constants.enum import IdentityProvider, UserStatus
+from app.constants.permissions import STANDARD_ROLE_MEMBER
 from app.models.iam.auth_events import AuthEventSubject
 from app.schemas.endpoints.auth import LoginUserPayload, RegisterUserPayload
 from app.services.iam.auth_event import AuthEventService
 from app.services.iam.identity import IdentityService
+from app.services.iam.rbac import RbacService
 from app.services.iam.session import SessionService
 from app.services.iam.visitors import VisitorService
 from app.services.user import UserService
@@ -22,12 +24,14 @@ class IdentityUserVisitorService:
         visitor_service: VisitorService,
         session_service: SessionService,
         auth_event_service: AuthEventService,
+        rbac_service: RbacService | None = None,
     ):
         self.identity_service = identity_service
         self.user_service = user_service
         self.visitor_service = visitor_service
         self.session_service = session_service
         self.auth_event_service = auth_event_service
+        self.rbac_service = rbac_service or RbacService()
         self.hashing_service = HashingService()
 
     async def register_user(
@@ -59,11 +63,17 @@ class IdentityUserVisitorService:
         if payload.provider == IdentityProvider.LOCAL:
             secret_hash = self.hashing_service.hash(payload.password)
 
+        role_id = payload.role_id
+        if role_id is None:
+            member_role = await self.rbac_service.get_role_by_name(STANDARD_ROLE_MEMBER, db)
+            if member_role is not None:
+                role_id = member_role.id
+
         user = await self.user_service.create_user(
             db=db,
             full_name=payload.full_name,
             avatar=payload.avatar,
-            role_id=payload.role_id,
+            role_id=role_id,
         )
         await db.flush()
 

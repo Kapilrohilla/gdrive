@@ -41,6 +41,7 @@ class FileActivityItem(BaseModel):
     metadata: dict | None = None
     actor_id: uuid.UUID | None = None
     actor_type: str | None = None
+    resource_id: str | None = None
 
 
 class GenerateUploadLinkResponse(BaseModel):

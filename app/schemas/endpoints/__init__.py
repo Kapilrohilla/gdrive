@@ -14,7 +14,12 @@ from app.schemas.endpoints.files import (
     MarkFileUploadRequest,
     MarkFileUploadResponse,
 )
-from app.schemas.endpoints.folders import CreateFolderRequest, FolderMessageResponse
+from app.schemas.endpoints.folders import (
+    CreateFolderRequest,
+    CreateFolderResponse,
+    FolderData,
+    FolderListResponse,
+)
 from app.schemas.endpoints.identity import IdentityHealthResponse
 from app.schemas.endpoints.users import CreateUserRequest, CreateUserResponse
 from app.schemas.endpoints.visitor import (
@@ -30,9 +35,11 @@ __all__ = [
     "AuthUserResponse",
     "AuthVisitorResponse",
     "CreateFolderRequest",
+    "CreateFolderResponse",
     "CreateUserRequest",
     "CreateUserResponse",
-    "FolderMessageResponse",
+    "FolderData",
+    "FolderListResponse",
     "GenerateUploadLinkRequest",
     "GenerateUploadLinkResponse",
     "GetVisitorsResponse",

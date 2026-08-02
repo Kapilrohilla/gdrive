@@ -1,11 +1,21 @@
 import uuid
 
-from fastapi import HTTPException
-
 from app.api.deps import DbSession
 from app.constants.enum import ResourceEventResourceType
 from app.services.drive.files import FileService
 from app.services.resource_events import ResourceEventService
+
+
+def _serialize_resource_event(resource_event) -> dict:
+    return {
+        "action": resource_event.action,
+        "timestamp": resource_event.created_at,
+        "user_agent": resource_event.user_agent,
+        "metadata": resource_event.event_metadata,
+        "actor_id": resource_event.actor_id,
+        "actor_type": resource_event.actor_type,
+        "resource_id": resource_event.resource_id,
+    }
 
 
 class FileResourceEventService:
@@ -22,17 +32,15 @@ class FileResourceEventService:
             resource_type=ResourceEventResourceType.FILE,
         )
 
-        return [
-            {
-                "action": resource_event.action,
-                "timestamp": resource_event.created_at,
-                "user_agent": resource_event.user_agent,
-                "metadata": resource_event.event_metadata,
-                "actor_id": resource_event.actor_id,
-                "actor_type": resource_event.actor_type,
-            }
-            for resource_event in resource_events
-        ]
+        return [_serialize_resource_event(resource_event) for resource_event in resource_events]
+
+    async def get_my_file_activity(self, db: DbSession, user_id: uuid.UUID) -> list[dict]:
+        resource_events = await self.resource_event_service.get_my_resource_events(
+            db=db,
+            actor_id=user_id,
+            resource_type=ResourceEventResourceType.FILE,
+        )
+        return [_serialize_resource_event(resource_event) for resource_event in resource_events]
 
 
 __all__ = ["FileResourceEventService"]

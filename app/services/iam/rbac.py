@@ -1,5 +1,10 @@
 import uuid
 
+from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
 from app.models.iam.permission import Permission
 from app.models.iam.role import Role
 from app.models.iam.role_permission import RolePermission
@@ -7,10 +12,6 @@ from app.models.iam.user import User
 from app.schemas.iam.permission import CreatePermissionDto, UpdatePermissionDto
 from app.schemas.iam.role import CreateRoleDto, UpdateRoleDto
 from app.schemas.iam.role_permission import CreateRolePermissionDto
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 
 class RbacService:
@@ -24,11 +25,17 @@ class RbacService:
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_role_by_name(self, name: str, db: AsyncSession) -> Role | None:
+        stmt = select(Role).where(Role.name == name)
+        result = await db.execute(stmt)
+        return result.scalar_one_or_none()
+
     async def create_role(self, payload: CreateRoleDto, db: AsyncSession) -> Role:
         role = Role(
             name=payload.name,
             description=payload.description,
             is_system=payload.is_system,
+            is_standard=payload.is_standard,
         )
         db.add(role)
         await db.flush()
@@ -48,6 +55,8 @@ class RbacService:
             role.description = payload.description
         if payload.is_system is not None:
             role.is_system = payload.is_system
+        if payload.is_standard is not None:
+            role.is_standard = payload.is_standard
 
         db.add(role)
         await db.flush()
@@ -58,8 +67,8 @@ class RbacService:
         role = await self.get_role(role_id, db)
         if role is None:
             raise HTTPException(status_code=404, detail="Role not found")
-        if role.is_system:
-            raise HTTPException(status_code=400, detail="System roles cannot be deleted")
+        if role.is_system or role.is_standard:
+            raise HTTPException(status_code=400, detail="Standard roles cannot be deleted")
 
         await db.delete(role)
         await db.flush()

@@ -74,3 +74,7 @@ class ResourceEventActions(StrEnum):
     SHARED = "shared"
     RESTORED = "restored"
     DELETED = "deleted"
+
+class VisitorAppType(StrEnum):
+    DRIVE_PORTAL="client_drive"
+    ADMIN_PORTAL="admin_portal"

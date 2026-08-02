@@ -23,9 +23,13 @@ class Role(Base):
         back_populates="role",
         cascade="all, delete-orphan",
     )
+
+    is_standard: Mapped[bool] = mapped_column(Boolean(), default=False)
+
     permissions = relationship(
         "Permission",
         secondary="role_permissions",
         back_populates="roles",
         viewonly=True,
     )
+

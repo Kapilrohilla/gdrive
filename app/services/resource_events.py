@@ -3,7 +3,11 @@ import uuid
 from sqlalchemy import Select
 
 from app.api.deps import DbSession
-from app.constants.enum import ResourceEventActions, ResourceEventActorType, ResourceEventResourceType
+from app.constants.enum import (
+    ResourceEventActions,
+    ResourceEventActorType,
+    ResourceEventResourceType,
+)
 from app.models.resource_events import ResourceEvents
 
 
@@ -17,6 +21,23 @@ class ResourceEventService:
         query = Select(ResourceEvents).where(
             ResourceEvents.resource_id == str(resource_id),
             ResourceEvents.resource_type == resource_type,
+        )
+        query_response = await db.execute(query)
+        return list(query_response.scalars().all())
+
+    async def get_my_resource_events(
+        self,
+        db: DbSession,
+        actor_id: uuid.UUID,
+        resource_type: ResourceEventResourceType,
+    ) -> list[ResourceEvents]:
+        query = (
+            Select(ResourceEvents)
+            .where(
+                ResourceEvents.actor_id == actor_id,
+                ResourceEvents.resource_type == resource_type,
+            )
+            .order_by(ResourceEvents.created_at.desc())
         )
         query_response = await db.execute(query)
         return list(query_response.scalars().all())

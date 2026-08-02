@@ -1,14 +1,31 @@
-from typing import Any
+import uuid
+from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CreateFolderRequest(BaseModel):
-    parent_id: str | None = None
-    owner_id: str
-    name: str = Field(min_length=1)
+    name: str = Field(min_length=1, max_length=100)
+    parent_id: uuid.UUID | None = None
 
 
-class FolderMessageResponse(BaseModel):
+class FolderData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    parent_id: uuid.UUID | None
+    owner_id: uuid.UUID
+    file_count: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class CreateFolderResponse(BaseModel):
     message: str
-    data: Any
+    data: FolderData
+
+
+class FolderListResponse(BaseModel):
+    message: str
+    data: list[FolderData]
