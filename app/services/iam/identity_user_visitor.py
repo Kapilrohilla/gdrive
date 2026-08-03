@@ -3,7 +3,7 @@ import uuid
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.constants.enum import IdentityProvider, UserStatus
+from app.constants.enum import IdentityProvider, UserStatus, VisitorAppType
 from app.constants.permissions import STANDARD_ROLE_MEMBER
 from app.models.iam.auth_events import AuthEventSubject
 from app.schemas.endpoints.auth import LoginUserPayload, RegisterUserPayload
@@ -63,11 +63,7 @@ class IdentityUserVisitorService:
         if payload.provider == IdentityProvider.LOCAL:
             secret_hash = self.hashing_service.hash(payload.password)
 
-        role_id = payload.role_id
-        if role_id is None:
-            member_role = await self.rbac_service.get_role_by_name(STANDARD_ROLE_MEMBER, db)
-            if member_role is not None:
-                role_id = member_role.id
+        role_id = await self._resolve_registration_role_id(visitor, payload.role_id, db)
 
         user = await self.user_service.create_user(
             db=db,
@@ -100,6 +96,33 @@ class IdentityUserVisitorService:
         await db.refresh(visitor)
 
         return user, identity, visitor
+
+    async def _resolve_registration_role_id(
+        self,
+        visitor,
+        explicit_role_id: uuid.UUID | None,
+        db: AsyncSession,
+    ) -> uuid.UUID | None:
+        if explicit_role_id is not None:
+            return explicit_role_id
+
+        app_type = visitor.app_type
+        if isinstance(app_type, VisitorAppType):
+            app_type_value = app_type.value
+        else:
+            app_type_value = str(app_type)
+
+        if app_type_value != VisitorAppType.DRIVE_PORTAL.value:
+            return None
+
+        member_role = await self.rbac_service.get_role_by_name(STANDARD_ROLE_MEMBER, db)
+        if member_role is None:
+            raise HTTPException(
+                status_code=500,
+                detail="Member role is not configured",
+            )
+
+        return member_role.id
 
     async def login_user(self, visitor_id: uuid.UUID, payload: LoginUserPayload, db: AsyncSession):
         visitor = await self.visitor_service.get_visitor_by_id(visitor_id, db)

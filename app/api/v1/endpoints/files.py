@@ -2,6 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
 
+import app.core.logger as logger
 from app.api.deps import DbSession
 from app.constants.enum import TokenType
 from app.middleware import authenticate, require_permission
@@ -36,12 +37,12 @@ file_resource_event_service = FileResourceEventService(
 
 
 @router.post(
-    "/gen_upload_link",
+    "/initialize_upload",
     dependencies=[Depends(require_permission("files", PermissionAction.CREATE))],
     response_model=GenerateUploadLinkResponse,
 )
-async def gen_upload_link(payload: GenerateUploadLinkRequest, db: DbSession):
-    service_response = await file_service.generate_pre_signed_url(
+async def initialize_upload(payload: GenerateUploadLinkRequest, db: DbSession):
+    service_response = await file_service.initialize_upload(
         name=payload.name,
         user_id=payload.user_id,
         folder_id=payload.folder_id,
@@ -49,6 +50,8 @@ async def gen_upload_link(payload: GenerateUploadLinkRequest, db: DbSession):
         db=db,
     )
 
+    logger.info(f"Link generated: {service_response}")
+    print(f"Link generated: {service_response}")
     return {
         "message": "Link generated",
         "data": service_response,
@@ -56,12 +59,12 @@ async def gen_upload_link(payload: GenerateUploadLinkRequest, db: DbSession):
 
 
 @router.post(
-    "/mark_upload_complete",
+    "/complete_upload",
     dependencies=[Depends(require_permission("files", PermissionAction.UPDATE))],
     response_model=MarkFileUploadResponse,
 )
-async def mark_upload_complete(payload: MarkFileUploadRequest, db: DbSession):
-    service_response = await file_service.mark_upload_complete(id=payload.id, db=db)
+async def complete_upload(payload: MarkFileUploadRequest, db: DbSession):
+    service_response = await file_service.complete_upload(id=payload.id, db=db)
     return {
         "message": "completed",
         "data": service_response,

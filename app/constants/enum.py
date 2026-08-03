@@ -56,13 +56,16 @@ class ResourceEventActorType(StrEnum):
     VISITOR = "visitor"
     SYSTEM = "system"
 
+
 class ResourceEventResourceType(StrEnum):
     FILE = "file"
     FOLDER = "folder"
 
+
 class OutboxTopics(StrEnum):
     CREATE_RESOURCE_EVENT = "create_resource_event"
     GENERATE_FILE_THUMBNAIL = "generate_file_thumbnail"
+
 
 class ResourceEventActions(StrEnum):
     CREATED = "created"
@@ -75,6 +78,7 @@ class ResourceEventActions(StrEnum):
     RESTORED = "restored"
     DELETED = "deleted"
 
+
 class VisitorAppType(StrEnum):
-    DRIVE_PORTAL="client_drive"
-    ADMIN_PORTAL="admin_portal"
+    DRIVE_PORTAL = "client_drive"
+    ADMIN_PORTAL = "admin_portal"

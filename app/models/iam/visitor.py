@@ -1,9 +1,8 @@
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, UniqueConstraint, func
+from sqlalchemy import DateTime, Enum as SQLEnum, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSON
-from sqlalchemy.dialects.postgresql.named_types import EnumGenerator
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
 
@@ -31,7 +30,15 @@ class Visitor(Base):
         onupdate=func.now(),
     )
 
-    app_type: Mapped[VisitorAppType] = mapped_column(EnumGenerator(VisitorAppType), nullable=False)
+    app_type: Mapped[VisitorAppType] = mapped_column(
+        SQLEnum(
+            VisitorAppType,
+            name="visitor_app_type",
+            values_callable=lambda enum: [member.value for member in enum],
+        ),
+        nullable=False,
+        default=VisitorAppType.DRIVE_PORTAL,
+    )
 
     user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
 

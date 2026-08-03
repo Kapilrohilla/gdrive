@@ -36,6 +36,7 @@ async def register_visitor(payload: RegisterVisitorRequest, db: DbSession):
     service_response = await visitor_jwt_service.register_and_generate_jwt(
         identifier_type=payload.identifier_type,
         identifier_value=payload.identifier_value,
+        app_type=payload.app_type,
         db=db,
     )
     return service_response

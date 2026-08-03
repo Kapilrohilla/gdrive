@@ -1,9 +1,11 @@
 import uuid
 from datetime import datetime, timezone
 
-from app.models.iam.visitor import Visitor
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.constants.enum import VisitorAppType
+from app.models.iam.visitor import Visitor
 
 
 class VisitorService:
@@ -28,7 +30,13 @@ class VisitorService:
         result = await db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def register_visitor(self, identifier_type: str, identifier_value: str, db: AsyncSession):
+    async def register_visitor(
+        self,
+        identifier_type: str,
+        identifier_value: str,
+        app_type: VisitorAppType,
+        db: AsyncSession,
+    ):
         stmt = select(Visitor).where(
             Visitor.identifier_type == identifier_type,
             Visitor.identifier_value == identifier_value,
@@ -38,12 +46,20 @@ class VisitorService:
 
         if existing_visitor is None:
             new_visitor = Visitor(
-                identifier_type=identifier_type, identifier_value=identifier_value
+                identifier_type=identifier_type,
+                identifier_value=identifier_value,
+                app_type=app_type,
             )
             db.add(new_visitor)
             await db.commit()
             await db.refresh(new_visitor)
             return new_visitor
+
+        if existing_visitor.app_type != app_type:
+            existing_visitor.app_type = app_type
+            db.add(existing_visitor)
+            await db.commit()
+            await db.refresh(existing_visitor)
 
         return existing_visitor
 

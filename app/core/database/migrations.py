@@ -43,14 +43,23 @@ def _seed_standard_rbac(connection: Connection) -> None:
             text(
                 """
                 INSERT INTO permissions (id, name, resource, action, description, created_at, updated_at)
-                SELECT gen_random_uuid(), :name, :resource, :action, :description, NOW(), NOW()
-                WHERE NOT EXISTS (SELECT 1 FROM permissions WHERE name = :name)
+                SELECT
+                    gen_random_uuid(),
+                    CAST(:name AS VARCHAR),
+                    CAST(:resource AS VARCHAR),
+                    CAST(:action AS permission_action),
+                    CAST(:description AS TEXT),
+                    NOW(),
+                    NOW()
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM permissions WHERE name = CAST(:name AS VARCHAR)
+                )
                 """
             ),
             {
                 "name": name,
                 "resource": resource,
-                "action": action.value,
+                "action": action.name,
                 "description": description,
             },
         )
@@ -63,8 +72,8 @@ def _seed_standard_rbac(connection: Connection) -> None:
             text(
                 """
                 INSERT INTO roles (id, name, description, is_system, is_standard, created_at, updated_at)
-                SELECT gen_random_uuid(), :name, :description, TRUE, TRUE, NOW(), NOW()
-                WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = :name)
+                SELECT gen_random_uuid(), CAST(:name AS VARCHAR), CAST(:description AS TEXT), TRUE, TRUE, NOW(), NOW()
+                WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = CAST(:name AS VARCHAR))
                 """
             ),
             {"name": role_name, "description": description},
@@ -73,8 +82,8 @@ def _seed_standard_rbac(connection: Connection) -> None:
             text(
                 """
                 UPDATE roles
-                SET is_system = TRUE, is_standard = TRUE, description = :description
-                WHERE name = :name
+                SET is_system = TRUE, is_standard = TRUE, description = CAST(:description AS TEXT)
+                WHERE name = CAST(:name AS VARCHAR)
                 """
             ),
             {"name": role_name, "description": description},
@@ -87,7 +96,7 @@ def _seed_standard_rbac(connection: Connection) -> None:
             SELECT gen_random_uuid(), r.id, p.id, NOW(), NOW()
             FROM roles r
             CROSS JOIN permissions p
-            WHERE r.name = :admin_role
+            WHERE r.name = CAST(:admin_role AS VARCHAR)
             AND NOT EXISTS (
                 SELECT 1 FROM role_permissions rp
                 WHERE rp.role_id = r.id AND rp.permission_id = p.id
@@ -104,8 +113,8 @@ def _seed_standard_rbac(connection: Connection) -> None:
                 INSERT INTO role_permissions (id, role_id, permission_id, created_at, updated_at)
                 SELECT gen_random_uuid(), r.id, p.id, NOW(), NOW()
                 FROM roles r
-                JOIN permissions p ON p.name = :permission_name
-                WHERE r.name = :member_role
+                JOIN permissions p ON p.name = CAST(:permission_name AS VARCHAR)
+                WHERE r.name = CAST(:member_role AS VARCHAR)
                 AND NOT EXISTS (
                     SELECT 1 FROM role_permissions rp
                     WHERE rp.role_id = r.id AND rp.permission_id = p.id
@@ -117,6 +126,40 @@ def _seed_standard_rbac(connection: Connection) -> None:
                 "permission_name": permission_name_value,
             },
         )
+
+
+def _ensure_visitor_app_type_enum(connection: Connection) -> None:
+    enum_exists = connection.execute(
+        text("SELECT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'visitor_app_type')")
+    ).scalar()
+
+    if not enum_exists:
+        connection.execute(
+            text("CREATE TYPE visitor_app_type AS ENUM ('client_drive', 'admin_portal')")
+        )
+        return
+
+    labels = {
+        row[0]
+        for row in connection.execute(
+            text(
+                """
+                SELECT e.enumlabel
+                FROM pg_enum e
+                JOIN pg_type t ON e.enumtypid = t.oid
+                WHERE t.typname = 'visitor_app_type'
+                """
+            )
+        )
+    }
+
+    if {"client_drive", "admin_portal"}.issubset(labels):
+        return
+
+    connection.execute(text("DROP TYPE visitor_app_type CASCADE"))
+    connection.execute(
+        text("CREATE TYPE visitor_app_type AS ENUM ('client_drive', 'admin_portal')")
+    )
 
 
 def apply_schema_migrations(connection: Connection) -> None:
@@ -152,6 +195,15 @@ def apply_schema_migrations(connection: Connection) -> None:
 
     if "user_id" in visitor_columns:
         connection.execute(text("ALTER TABLE visitors DROP COLUMN user_id"))
+
+    if "app_type" not in visitor_columns:
+        _ensure_visitor_app_type_enum(connection)
+        connection.execute(
+            text(
+                "ALTER TABLE visitors ADD COLUMN app_type visitor_app_type "
+                "NOT NULL DEFAULT 'client_drive'"
+            )
+        )
 
     inspector = inspect(connection)
     if "roles" in inspector.get_table_names():

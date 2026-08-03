@@ -24,6 +24,7 @@ s3_client = boto3.client(
     service_name="s3",
     aws_access_key_id=settings.aws_api_key,
     aws_secret_access_key=settings.aws_secret_key,
+    region_name=settings.aws_region
 )
 
 outbox_service = OutboxService()
@@ -45,7 +46,7 @@ def serialize_file(file: Files) -> dict:
 
 class FileService:
     @staticmethod
-    async def generate_pre_signed_url(
+    async def initialize_upload(
         name: str,
         user_id: str,
         content_type: str,
@@ -90,7 +91,7 @@ class FileService:
         }
 
     @staticmethod
-    async def mark_upload_complete(id: uuid.UUID, db: AsyncSession):
+    async def complete_upload(id: uuid.UUID, db: AsyncSession):
         query = Select(Files).where(Files.id == id)
         query_response = await db.execute(query)
         try:
@@ -122,9 +123,13 @@ class FileService:
                 "message": "Not uploaded",
             }
 
-        stmt = update(Files).where(Files.id == id).values(
-            status=FileStatus.READY,
-            size=file_size,
+        stmt = (
+            update(Files)
+            .where(Files.id == id)
+            .values(
+                status=FileStatus.READY,
+                size=file_size,
+            )
         )
         await db.execute(stmt)
 
@@ -149,13 +154,9 @@ class FileService:
             "message": "uploaded",
         }
 
-    async def get_files(
-        self, db: DbSession, folder_id: uuid.UUID | None = None
-    ) -> list[Files]:
+    async def get_files(self, db: DbSession, folder_id: uuid.UUID | None = None) -> list[Files]:
         query = (
-            Select(Files)
-            .where(Files.status == FileStatus.READY)
-            .order_by(Files.created_at.desc())
+            Select(Files).where(Files.status == FileStatus.READY).order_by(Files.created_at.desc())
         )
         if folder_id is None:
             query = query.where(Files.folder_id.is_(None))

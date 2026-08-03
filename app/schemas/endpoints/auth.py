@@ -8,6 +8,7 @@ from app.constants.enum import (
     IdentityProvider,
     IdentityStatus,
     UserStatus,
+    VisitorAppType,
 )
 from app.schemas.iam.auth_event import AuthEventResponse
 
@@ -67,6 +68,7 @@ class AuthVisitorResponse(BaseModel):
     id: uuid.UUID
     identifier_type: str
     identifier_value: str
+    app_type: VisitorAppType
     first_seen_at: datetime
     last_seen_at: datetime
     created_at: datetime

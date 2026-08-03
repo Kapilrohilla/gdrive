@@ -3,10 +3,13 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.constants.enum import VisitorAppType
+
 
 class RegisterVisitorRequest(BaseModel):
     identifier_type: str = Field(min_length=1, max_length=100)
     identifier_value: str = Field(min_length=1, max_length=100)
+    app_type: VisitorAppType = VisitorAppType.DRIVE_PORTAL
 
 
 class VisitorItemResponse(BaseModel):
@@ -15,6 +18,7 @@ class VisitorItemResponse(BaseModel):
     id: uuid.UUID
     identifier_type: str
     identifier_value: str
+    app_type: VisitorAppType
     first_seen_at: datetime
     last_seen_at: datetime
     created_at: datetime

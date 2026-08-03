@@ -40,9 +40,12 @@ PERMISSION_DEFINITIONS: list[tuple[str, PermissionAction, str]] = [
 
 MEMBER_PERMISSION_NAMES: set[str] = {
     permission_name(resource, action)
-    for resource, action, _ in [
+    for resource, action in [
         ("files", PermissionAction.READ),
+        ("files", PermissionAction.CREATE),
+        ("files", PermissionAction.UPDATE),
         ("folders", PermissionAction.READ),
+        ("folders", PermissionAction.CREATE),
         ("file_activity", PermissionAction.READ),
         ("my_file_activity", PermissionAction.READ),
         ("short_urls", PermissionAction.CREATE),

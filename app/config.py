@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
     jwt_secret: str = ""
     host_url: str = "http://localhost:8000"
-
+    log_level: str = "INFO"
+    aws_region: str = "ap-south-1"
 
 settings = Settings()
