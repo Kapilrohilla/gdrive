@@ -14,4 +14,5 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     aws_region: str = "ap-south-1"
 
+
 settings = Settings()

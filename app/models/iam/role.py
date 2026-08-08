@@ -32,4 +32,3 @@ class Role(Base):
         back_populates="roles",
         viewonly=True,
     )
-

@@ -1,7 +1,6 @@
 import uuid
 
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import String
+from sqlalchemy import Enum as SQLEnum, String
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 

@@ -36,6 +36,9 @@ PERMISSION_DEFINITIONS: list[tuple[str, PermissionAction, str]] = [
     ("permissions", PermissionAction.CREATE, "Create permissions"),
     ("permissions", PermissionAction.UPDATE, "Update permissions"),
     ("permissions", PermissionAction.DELETE, "Delete permissions"),
+    ("config", PermissionAction.READ, "Read app configuration"),
+    ("config", PermissionAction.UPDATE, "Update app configuration"),
+    ("config", PermissionAction.DELETE, "Delete app configuration"),
 ]
 
 MEMBER_PERMISSION_NAMES: set[str] = {
@@ -44,12 +47,16 @@ MEMBER_PERMISSION_NAMES: set[str] = {
         ("files", PermissionAction.READ),
         ("files", PermissionAction.CREATE),
         ("files", PermissionAction.UPDATE),
+        ("files", PermissionAction.DELETE),
         ("folders", PermissionAction.READ),
         ("folders", PermissionAction.CREATE),
+        ("folders", PermissionAction.UPDATE),
+        ("folders", PermissionAction.DELETE),
         ("file_activity", PermissionAction.READ),
         ("my_file_activity", PermissionAction.READ),
         ("short_urls", PermissionAction.CREATE),
         ("short_urls", PermissionAction.READ),
+        ("config", PermissionAction.READ),
     ]
 }
 

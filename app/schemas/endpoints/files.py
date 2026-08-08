@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from app.models.drive.files import FileStatus
 
@@ -18,16 +18,23 @@ class MarkFileUploadRequest(BaseModel):
     id: uuid.UUID
 
 
+class RenameFileRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+
+
 class FileData(BaseModel):
     id: uuid.UUID
     name: str
     folder_id: str | None
+    owner_id: uuid.UUID | None = None
     storage_path: str
     size: int
     extension: str
     status: FileStatus
     last_accessed_at: datetime
     created_at: datetime
+    is_trashed: bool = False
+    trashed_at: datetime | None = None
 
 
 class FileUrlData(FileData):
@@ -77,3 +84,17 @@ class FileActivityResponse(BaseModel):
 class FileListResponse(BaseModel):
     message: str
     data: list[FileData]
+
+
+class FileMessageResponse(BaseModel):
+    message: str
+    data: FileData
+
+
+class EmptyTrashData(BaseModel):
+    deleted_count: int
+
+
+class EmptyTrashResponse(BaseModel):
+    message: str
+    data: EmptyTrashData

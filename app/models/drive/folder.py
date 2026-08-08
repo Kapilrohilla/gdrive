@@ -1,6 +1,7 @@
+import datetime
 import uuid
 
-from sqlalchemy import ForeignKey
+from sqlalchemy import DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql.sqltypes import String
@@ -33,5 +34,20 @@ class Folder(Base):
 
     file_count: Mapped[int] = mapped_column(Integer(), default=0)
 
-    parent = relationship("Folder")
-    owner = relationship("User")
+    is_trashed: Mapped[bool] = mapped_column(nullable=False, default=False, index=True)
+    trashed_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(),
+        nullable=True,
+        default=None,
+    )
+    trashed_by_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True,
+        default=None,
+    )
+
+    parent = relationship("Folder", remote_side="Folder.id", foreign_keys=[parent_id])
+    owner = relationship("User", foreign_keys=[owner_id])
+    trashed_by = relationship(
+        "User", foreign_keys=[trashed_by_id], back_populates="trashed_folders"
+    )

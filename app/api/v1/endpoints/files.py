@@ -9,14 +9,17 @@ from app.middleware import authenticate, require_permission
 from app.models.iam.permission import PermissionAction
 from app.schemas.endpoints.files import (
     DownloadFileResponse,
+    EmptyTrashResponse,
     FileActivityResponse,
     FileListResponse,
+    FileMessageResponse,
     GenerateUploadLinkRequest,
     GenerateUploadLinkResponse,
     GetFileResponse,
     MarkFileUploadRequest,
     MarkFileUploadResponse,
     PreviewFileResponse,
+    RenameFileRequest,
 )
 from app.services.drive.file_resource_event import FileResourceEventService
 from app.services.drive.files import FileService, serialize_file
@@ -51,7 +54,6 @@ async def initialize_upload(payload: GenerateUploadLinkRequest, db: DbSession):
     )
 
     logger.info(f"Link generated: {service_response}")
-    print(f"Link generated: {service_response}")
     return {
         "message": "Link generated",
         "data": service_response,
@@ -74,13 +76,60 @@ async def complete_upload(payload: MarkFileUploadRequest, db: DbSession):
 @router.get(
     "/",
     dependencies=[Depends(require_permission("files", PermissionAction.READ))],
-    response_model=FileListResponse,
+    # response_model=FileListResponse,
 )
-async def list_files(db: DbSession, folder_id: UUID | None = None):
-    files = await file_service.get_files(db=db, folder_id=folder_id)
+async def list_files(request: Request, db: DbSession, folder_id: str | None = None):
+    owner_id = UUID(str(request.state.user_id))
+    files = await file_service.get_files(
+        db=db,
+        owner_id=owner_id,
+        folder_id=UUID(folder_id) if folder_id else None,
+    )
     return {
         "message": "files retrieved",
         "data": [serialize_file(file) for file in files],
+    }
+
+
+@router.get(
+    "/recent",
+    dependencies=[Depends(require_permission("files", PermissionAction.READ))],
+    # response_model=FileListResponse,
+)
+async def list_recent_files(request: Request, db: DbSession, limit: int = 20):
+    owner_id = UUID(str(request.state.user_id))
+    files = await file_service.get_recent_files(db=db, owner_id=owner_id, limit=limit)
+    return {
+        "message": "recent files retrieved",
+        "data": [serialize_file(file) for file in files],
+    }
+
+
+@router.get(
+    "/trash",
+    dependencies=[Depends(require_permission("files", PermissionAction.READ))],
+    response_model=FileListResponse,
+)
+async def list_trashed_files(request: Request, db: DbSession):
+    owner_id = UUID(str(request.state.user_id))
+    files = await file_service.get_trashed_files(db=db, owner_id=owner_id)
+    return {
+        "message": "trashed files retrieved",
+        "data": [serialize_file(file) for file in files],
+    }
+
+
+@router.delete(
+    "/trash",
+    dependencies=[Depends(require_permission("files", PermissionAction.DELETE))],
+    response_model=EmptyTrashResponse,
+)
+async def empty_trash_files(request: Request, db: DbSession):
+    owner_id = UUID(str(request.state.user_id))
+    deleted_count = await file_service.empty_trash(db=db, owner_id=owner_id)
+    return {
+        "message": "trash emptied",
+        "data": {"deleted_count": deleted_count},
     }
 
 
@@ -114,6 +163,48 @@ async def get_file(file_id: UUID, db: DbSession):
     }
 
 
+@router.patch(
+    "/{file_id}/rename",
+    dependencies=[Depends(require_permission("files", PermissionAction.UPDATE))],
+    response_model=FileMessageResponse,
+)
+async def rename_file(file_id: UUID, payload: RenameFileRequest, request: Request, db: DbSession):
+    owner_id = UUID(str(request.state.user_id))
+    file = await file_service.rename_file(db=db, id=file_id, name=payload.name, owner_id=owner_id)
+    return {
+        "message": "file renamed",
+        "data": serialize_file(file),
+    }
+
+
+@router.post(
+    "/{file_id}/trash",
+    dependencies=[Depends(require_permission("files", PermissionAction.DELETE))],
+    response_model=FileMessageResponse,
+)
+async def trash_file(file_id: UUID, request: Request, db: DbSession):
+    user_id = UUID(str(request.state.user_id))
+    file = await file_service.trash_file(db=db, id=file_id, user_id=user_id)
+    return {
+        "message": "file moved to trash",
+        "data": serialize_file(file),
+    }
+
+
+@router.post(
+    "/{file_id}/restore",
+    dependencies=[Depends(require_permission("files", PermissionAction.UPDATE))],
+    response_model=FileMessageResponse,
+)
+async def restore_file(file_id: UUID, request: Request, db: DbSession):
+    user_id = UUID(str(request.state.user_id))
+    file = await file_service.restore_file(db=db, id=file_id, user_id=user_id)
+    return {
+        "message": "file restored",
+        "data": serialize_file(file),
+    }
+
+
 @router.get(
     "/{file_id}/download",
     dependencies=[Depends(require_permission("files", PermissionAction.SELECT))],
@@ -135,7 +226,7 @@ async def download_file(file_id: UUID, db: DbSession, request: Request):
 
 @router.get(
     "/{file_id}/preview",
-    dependencies=[Depends(require_permission("files", PermissionAction.SELECT))],
+    dependencies=[Depends(require_permission("files", PermissionAction.READ))],
     response_model=PreviewFileResponse,
 )
 async def preview_file(file_id: UUID, db: DbSession, request: Request):
@@ -154,7 +245,7 @@ async def preview_file(file_id: UUID, db: DbSession, request: Request):
 
 @router.get(
     "/{file_id}/activity",
-    dependencies=[Depends(require_permission("file_activity", PermissionAction.READ))],
+    dependencies=[Depends(require_permission("file_activity", PermissionAction.SELECT))],
     response_model=FileActivityResponse,
 )
 async def get_file_activity(file_id: UUID, db: DbSession):

@@ -32,9 +32,7 @@ def _seed_standard_rbac(connection: Connection) -> None:
     inspector = inspect(connection)
     if not _column_exists(inspector, "roles", "is_standard"):
         connection.execute(
-            text(
-                "ALTER TABLE roles ADD COLUMN is_standard BOOLEAN NOT NULL DEFAULT FALSE"
-            )
+            text("ALTER TABLE roles ADD COLUMN is_standard BOOLEAN NOT NULL DEFAULT FALSE")
         )
 
     for resource, action, description in PERMISSION_DEFINITIONS:
@@ -208,3 +206,109 @@ def apply_schema_migrations(connection: Connection) -> None:
     inspector = inspect(connection)
     if "roles" in inspector.get_table_names():
         _seed_standard_rbac(connection)
+
+    _apply_trash_and_owner_migrations(connection)
+
+
+def _add_column_if_missing(
+    connection: Connection,
+    inspector,
+    table: str,
+    column: str,
+    ddl: str,
+) -> None:
+    if not _column_exists(inspector, table, column):
+        connection.execute(text(ddl))
+
+
+def _apply_trash_and_owner_migrations(connection: Connection) -> None:
+    inspector = inspect(connection)
+
+    if "files" not in inspector.get_table_names():
+        return
+
+    file_columns = {col["name"] for col in inspector.get_columns("files")}
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "files",
+        "owner_id",
+        "ALTER TABLE files ADD COLUMN owner_id UUID REFERENCES users(id)",
+    )
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "files",
+        "is_trashed",
+        "ALTER TABLE files ADD COLUMN is_trashed BOOLEAN NOT NULL DEFAULT FALSE",
+    )
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "files",
+        "trashed_at",
+        "ALTER TABLE files ADD COLUMN trashed_at TIMESTAMP",
+    )
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "files",
+        "trashed_by_id",
+        "ALTER TABLE files ADD COLUMN trashed_by_id UUID REFERENCES users(id)",
+    )
+
+    if "owner_id" in file_columns or _column_exists(inspector, "files", "owner_id"):
+        connection.execute(
+            text(
+                """
+                UPDATE files AS f
+                SET owner_id = CAST(split_part(f.storage_path, '/', 1) AS UUID)
+                WHERE f.owner_id IS NULL
+                  AND f.storage_path LIKE '%/%'
+                  AND split_part(f.storage_path, '/', 1) ~*
+                      '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+                  AND EXISTS (
+                      SELECT 1 FROM users u
+                      WHERE u.id = CAST(split_part(f.storage_path, '/', 1) AS UUID)
+                  )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                UPDATE files AS f
+                SET owner_id = fo.owner_id
+                FROM folders fo
+                WHERE f.owner_id IS NULL
+                  AND f.storage_path LIKE '%/%'
+                  AND fo.id = CAST(split_part(f.storage_path, '/', 1) AS UUID)
+                """
+            )
+        )
+
+    inspector = inspect(connection)
+    if "folders" not in inspector.get_table_names():
+        return
+
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "folders",
+        "is_trashed",
+        "ALTER TABLE folders ADD COLUMN is_trashed BOOLEAN NOT NULL DEFAULT FALSE",
+    )
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "folders",
+        "trashed_at",
+        "ALTER TABLE folders ADD COLUMN trashed_at TIMESTAMP",
+    )
+    _add_column_if_missing(
+        connection,
+        inspector,
+        "folders",
+        "trashed_by_id",
+        "ALTER TABLE folders ADD COLUMN trashed_by_id UUID REFERENCES users(id)",
+    )

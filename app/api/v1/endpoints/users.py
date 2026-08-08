@@ -1,5 +1,5 @@
-from datetime import datetime
 import uuid
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Request
 
@@ -7,7 +7,11 @@ from app.api.deps import DbSession
 from app.constants.enum import TokenType
 from app.middleware import authenticate, require_permission
 from app.models.iam.permission import PermissionAction
-from app.schemas.endpoints.users import CreateUserRequest, CreateUserResponse, GetUserProfileResponse
+from app.schemas.endpoints.users import (
+    CreateUserRequest,
+    CreateUserResponse,
+    GetUserProfileResponse,
+)
 from app.services.user import user_service
 
 router = APIRouter(

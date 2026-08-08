@@ -32,3 +32,13 @@ class User(Base):
     sessions = relationship("Session", back_populates="user")
     auth_events = relationship("AuthEvent", back_populates="user")
     short_urls = relationship("ShortUrls", back_populates="user")
+    trashed_files = relationship(
+        "Files",
+        foreign_keys="Files.trashed_by_id",
+        back_populates="trashed_by",
+    )
+    trashed_folders = relationship(
+        "Folder",
+        foreign_keys="Folder.trashed_by_id",
+        back_populates="trashed_by",
+    )

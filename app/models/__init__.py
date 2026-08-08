@@ -15,11 +15,13 @@ from app.models.iam import (
     UserStatus,
     Visitor,
 )
-from app.models.outbox import Outbox
+from app.models.platform.config import AppConfig
+from app.models.platform.outbox import Outbox
+from app.models.platform.short_urls import ShortUrls
 from app.models.resource_events import ResourceEvents
-from app.models.short_urls import ShortUrls
 
 __all__ = [
+    "AppConfig",
     "AuthEvent",
     "AuthEventSubject",
     "Files",

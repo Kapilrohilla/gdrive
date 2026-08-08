@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, files, folders, rbac, users, visitor
+from app.api.v1.endpoints import auth, config, files, folders, rbac, users, visitor
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(auth.router)
@@ -9,3 +9,4 @@ api_router.include_router(users.router)
 api_router.include_router(folders.router)
 api_router.include_router(files.router)
 api_router.include_router(visitor.router)
+api_router.include_router(config.router)

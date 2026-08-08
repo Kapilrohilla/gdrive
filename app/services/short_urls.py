@@ -3,7 +3,7 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.short_urls import ShortUrls
+from app.models.platform.short_urls import ShortUrls
 from app.services.utils.encoding import EncodingService
 
 

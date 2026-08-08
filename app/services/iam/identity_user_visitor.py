@@ -145,7 +145,7 @@ class IdentityUserVisitorService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
 
         # disable the status check for now - reason need to build the verification process system first
-        
+
         # if not self.identity_service.is_identity_active(identity):
         #     await self.auth_event_service.record(
         #         db=db,
